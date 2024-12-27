@@ -1,0 +1,9 @@
+tensorflow==2.15.0
+tensorflow-quantum==0.7.3
+importlib
+pkg_resources
+cirq
+sympy
+seaborn
+collections
+cirq
