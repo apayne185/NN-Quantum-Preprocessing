@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CPU wheels: CI has no GPU, and the CUDA wheels are ~2 GB larger.
+  TORCH_INDEX: https://download.pytorch.org/whl/cpu
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v5
+      - run: uvx ruff check src tests
+      - run: uvx ruff format --check src tests
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
+          activate-environment: true  # setup-uv creates and activates .venv
+      - name: Install
+        run: |
+          uv pip install torch --index-url "$TORCH_INDEX"
+          uv pip install -e ".[dev,serve]"
+      - name: Cache MNIST
+        uses: actions/cache@v4
+        with:
+          path: data/mnist.npz
+          key: mnist-731c5ac6
+      - name: Tests
+        run: python -m pytest -m "not slow"
+      - name: Slow tests (quick benchmark suites, hybrid training)
+        run: python -m pytest -m slow
+
+  bench-smoke:
+    # Catches benchmark code that crashes. Timings on shared runners are too
+    # noisy to gate on; use `qnnbench.bench.compare` on dedicated hardware.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          activate-environment: true
+      - name: Install
+        run: |
+          uv pip install torch --index-url "$TORCH_INDEX"
+          uv pip install -e ".[dev,bench]"
+      - run: python -m qnnbench.bench qubits batch fusion grad dtype quanv --quick
+
+  docker:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: qnnbench:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
