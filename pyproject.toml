@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "qnnbench"
+version = "0.1.0"
+description = "Batched PyTorch state-vector simulation of quantum neural networks, with CPU/GPU benchmarks"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Anna Payne" }]
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.3",
+    "numpy>=1.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.5",
+    "cirq-core>=1.3",   # reference simulator for correctness tests
+]
+bench = [
+    "matplotlib>=3.8",
+    "pennylane>=0.36",  # framework comparison baseline
+]
+serve = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "httpx>=0.27",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/qnnbench"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+extend-exclude = ["legacy"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "network: downloads MNIST (skipped when offline)",
+    "slow: takes more than a few seconds",
+]
