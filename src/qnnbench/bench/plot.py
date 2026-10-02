@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import defaultdict
 from pathlib import Path
 
@@ -22,11 +23,23 @@ import matplotlib.pyplot as plt  # noqa: E402
 # Validated categorical order (light surface); assigned in order, never cycled.
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
 SURFACE, INK, INK_2, GRID = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df"
+# A series keeps its slot in every figure (color follows the entity, not its rank).
+SLOT = {
+    "unfused": 1, "fused (k=5)": 0, "forward": 0, "fwd+bwd": 1, "throughput": 0,
+    "autograd": 0, "adjoint": 1, "param_shift": 2, "tfq adjoint": 3,
+    "adjoint = param_shift": 1,
+    "qnnbench (fused)": 0, "qnnbench (unfused)": 1, "pennylane": 2,
+    "tensorflow-quantum": 3, "cirq": 4,
+}  # fmt: skip
 
 
-def _style(ax, title: str, xlabel: str, ylabel: str):
+def _style(ax, title: str, xlabel: str, ylabel: str, device: str | None = None):
     ax.set_facecolor(SURFACE)
-    ax.set_title(title, loc="left", color=INK, fontsize=11, fontweight="semibold")
+    ax.set_title(
+        title, loc="left", color=INK, fontsize=11, fontweight="bold", pad=18 if device else 6
+    )
+    if device:
+        ax.text(0, 1.02, device, transform=ax.transAxes, fontsize=9, color=INK_2)
     ax.set_xlabel(xlabel, color=INK_2)
     ax.set_ylabel(ylabel, color=INK_2)
     ax.grid(True, which="major", color=GRID, linewidth=0.8)
@@ -45,7 +58,7 @@ def _lines(ax, series: dict[str, list[tuple[float, float]]], order: list[str] | 
         if not pts:
             continue
         xs, ys = zip(*pts, strict=True)
-        color = SERIES[i]
+        color = SERIES[SLOT.get(name, i)]
         ax.plot(xs, ys, color=color, linewidth=2, marker="o", markersize=5,
                 markeredgecolor=SURFACE, markeredgewidth=1.5, label=name)  # fmt: skip
         if len(names) <= 4:  # direct label at the line end, in text ink
@@ -69,7 +82,11 @@ def _save(fig, path: Path):
 
 def _device(payload: dict) -> str:
     env = payload["env"]
-    return env["device_name"] if env["device"].startswith("cuda") else f"CPU: {env['device_name']}"
+    if env["device"].startswith("cuda"):
+        return env["device_name"]
+    # "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz" -> "Intel i7-1065G7 (CPU)"
+    name = re.sub(r"\((R|TM)\)|CPU @.*|Core", "", env["device_name"])
+    return " ".join(name.split()) + " (CPU)"
 
 
 # --------------------------------------------------------------------------- per suite
@@ -83,7 +100,7 @@ def plot_qubits(ms, device, out):
     fig, (ax,) = _figure()
     _lines(ax, series, ["unfused", "fused (k=5)"])
     ax.set_yscale("log")
-    _style(ax, f"QNN forward latency vs qubits, batch 32 - {device}", "qubits", "p50 latency (ms)")
+    _style(ax, "QNN forward latency vs qubits, batch 32", "qubits", "p50 latency (ms)", device)
     _save(fig, out)
 
 
@@ -95,8 +112,8 @@ def plot_fusion(ms, device, out):
     fig, (ax,) = _figure()
     _lines(ax, series, ["forward", "fwd+bwd"])
     ax.set_xticks(sorted({m["case"]["fuse"] for m in ms}))
-    _style(ax, f"Gate fusion width, {n} qubits, batch 32 - {device}",
-           "max qubits per fused block (0 = off)", "p50 latency (ms)")  # fmt: skip
+    _style(ax, f"Gate fusion width, {n} qubits, batch 32",
+           "max qubits per fused block (0 = off)", "p50 latency (ms)", device)  # fmt: skip
     _save(fig, out)
 
 
@@ -113,10 +130,15 @@ def plot_grad(ms, device, out):
     fig, (ax_t, ax_m) = _figure(2)
     _lines(ax_t, time_s, order)
     ax_t.set_yscale("log")
-    _style(ax_t, f"Training step time - {device}", "qubits", "p50 fwd+bwd (ms)")
-    _lines(ax_m, mem_s, [k for k in order if k in mem_s])
+    _style(ax_t, "Training step time, batch 32", "qubits", "p50 fwd+bwd (ms)", device)
+    if mem_s.get("adjoint") == mem_s.get("param_shift"):
+        # Identical by construction (both keep one state); one line, not two stacked.
+        mem_s["adjoint = param_shift"] = mem_s.pop("adjoint")
+        mem_s.pop("param_shift")
+    _lines(ax_m, mem_s, [k for k in ("autograd", "adjoint = param_shift", "adjoint", "param_shift")
+                         if k in mem_s])  # fmt: skip
     ax_m.set_yscale("log")
-    _style(ax_m, "Memory kept for backward", "qubits", "saved tensors (MB)")
+    _style(ax_m, "Memory kept for backward", "qubits", "saved tensors (MB)", device)
     _save(fig, out)
 
 
@@ -129,7 +151,7 @@ def plot_frameworks(ms, device, out):
     fig, (ax,) = _figure()
     _lines(ax, series, order)
     ax.set_yscale("log")
-    _style(ax, f"QNN forward pass by framework, batch 32 - {device}", "qubits", "p50 latency (ms)")
+    _style(ax, "QNN forward pass by framework, batch 32", "qubits", "p50 latency (ms)", device)
     _save(fig, out)
 
 
@@ -140,7 +162,7 @@ def plot_batch(ms, device, out):
     _lines(ax, series)
     ax.get_legend().remove()  # single series: the title names it
     ax.set_xscale("log", base=2)
-    _style(ax, f"Throughput vs batch size, {n} qubits - {device}", "batch size", "samples / s")
+    _style(ax, f"Throughput vs batch size, {n} qubits", "batch size", "samples / s", device)
     _save(fig, out)
 
 
@@ -167,7 +189,7 @@ def main(argv=None):
             payload = json.loads(f.read_text())
             by_device[_device(payload)] += payload["measurements"]
         for device, ms in by_device.items():
-            slug = "".join(c if c.isalnum() else "-" for c in device.lower()).strip("-")
+            slug = re.sub(r"[^a-z0-9]+", "-", device.lower()).strip("-")
             fn(ms, device, args.out / f"{suite}-{slug}.png")
 
 
