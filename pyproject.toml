@@ -43,6 +43,10 @@ extend-exclude = ["legacy"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
 
+[tool.ruff.lint.per-file-ignores]
+# Suites build closures over loop variables and call them within the same iteration.
+"src/qnnbench/bench/suites.py" = ["B023"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
