@@ -31,8 +31,9 @@ class TrainConfig:
     seed: int = 0
     num_train: int | None = None  # train on the first N examples only
     device: str = "auto"
-    grad_method: str = "adjoint"
+    grad_method: str = "autograd"
     dtype: str = "complex64"
+    fuse: int = 5  # max qubits per fused gate block; 0 disables fusion
     compile: bool = False
 
 
@@ -66,7 +67,7 @@ def hinge_loss(pred: torch.Tensor, y_pm1: torch.Tensor) -> torch.Tensor:
 def build_model(cfg: TrainConfig) -> tuple[nn.Module, callable]:
     """Return the model and its loss; both models take labels in {-1, +1}."""
     if cfg.model == "qnn":
-        model = QNN(grad_method=cfg.grad_method, dtype=getattr(torch, cfg.dtype))
+        model = QNN(grad_method=cfg.grad_method, dtype=getattr(torch, cfg.dtype), fuse=cfg.fuse)
         return model, hinge_loss
     if cfg.model == "mlp":
         bce = nn.BCEWithLogitsLoss()

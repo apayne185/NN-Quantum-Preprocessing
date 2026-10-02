@@ -14,6 +14,7 @@ from qnnbench.sim import (
     expect_z,
     expect_z_all,
     expectation,
+    plan_fusion,
     product_state,
     qnn_circuit,
     simulate,
@@ -175,3 +176,34 @@ def test_adjoint_saves_constant_memory_independent_of_depth():
     state_bytes = 16 * 2**8 * 8
     assert saved_bytes("autograd", 80) > 2 * saved_bytes("autograd", 20)
     assert saved_bytes("adjoint", 80) == saved_bytes("adjoint", 20) == state_bytes
+
+
+@pytest.mark.parametrize("max_qubits", [2, 3, 4, 5])
+@pytest.mark.parametrize("seed", range(4))
+def test_fused_simulation_matches_unfused(max_qubits, seed):
+    n = 6
+    c, params = random_circuit(n, depth=50, seed=seed)
+    plan = plan_fusion(c, max_qubits)
+    assert sorted(i for b in plan for i in b.ops) == list(range(len(c.ops)))
+    assert all(b.diagonal or len(b.qubits) <= max_qubits for b in plan)
+    state0 = basis_state(torch.tensor([[1, 0, 1, 1, 0, 0]]), n, dtype=torch.complex128)
+    torch.testing.assert_close(simulate(c, params, state0, plan), simulate(c, params, state0))
+
+
+def test_fusion_merges_the_qnn_zz_layer_into_one_block():
+    c = qnn_circuit()
+    plan = plan_fusion(c, 5)
+    diag_blocks = [b for b in plan if b.diagonal]
+    assert len(diag_blocks) == 1 and len(diag_blocks[0].ops) == 16
+    assert len(plan) < len(c.ops) / 4
+
+
+@pytest.mark.parametrize("method", GRAD_METHODS)
+def test_gradients_with_fusion_match_unfused(method):
+    c = qnn_circuit(n_data=6)
+    params = torch.rand(c.n_params, dtype=torch.float64, requires_grad=True)
+    state0 = basis_state(torch.tensor([[1, 0, 1, 1, 0, 1]]), 7, offset=1, dtype=torch.complex128)
+    (g_ref,) = torch.autograd.grad(expectation(c, params, state0, 0).sum(), params)
+    out = expectation(c, params, state0, 0, method=method, plan=plan_fusion(c, 3))
+    (g,) = torch.autograd.grad(out.sum(), params)
+    torch.testing.assert_close(g, g_ref)

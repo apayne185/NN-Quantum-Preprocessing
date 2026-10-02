@@ -1,4 +1,5 @@
 from qnnbench.sim.circuit import Circuit, Op, qnn_circuit
+from qnnbench.sim.fusion import Block, plan_fusion
 from qnnbench.sim.statevector import (
     GRAD_METHODS,
     basis_state,
@@ -12,6 +13,8 @@ from qnnbench.sim.statevector import (
 )
 
 __all__ = [
+    "Block",
+    "plan_fusion",
     "GRAD_METHODS",
     "Circuit",
     "Op",

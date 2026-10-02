@@ -17,6 +17,7 @@ from __future__ import annotations
 import torch
 
 from qnnbench.sim.circuit import Circuit, Op
+from qnnbench.sim.fusion import Block
 from qnnbench.sim.gates import GATES
 
 Tensor = torch.Tensor
@@ -76,6 +77,18 @@ def apply_2q(state: Tensor, mat: Tensor, qubits: tuple[int, int], n: int, diagon
     return out.reshape(state.shape)
 
 
+def apply_kq(state: Tensor, mat: Tensor, qubits: tuple[int, ...], n: int) -> Tensor:
+    """Dense k-qubit gate (``qubits`` sorted): move target axes last, one GEMM, move back."""
+    k = len(qubits)
+    batch = state.shape[0]
+    axes = [q + 1 for q in qubits]
+    last = list(range(n + 1 - k, n + 1))
+    s = state.reshape(batch, *([2] * n)).movedim(axes, last)
+    shape = s.shape
+    out = (s.reshape(-1, 2**k) @ mat.transpose(0, 1)).reshape(shape).movedim(last, axes)
+    return out.reshape(batch, -1)
+
+
 def apply(state: Tensor, mat: Tensor, op: Op, n: int) -> Tensor:
     diagonal = GATES[op.gate].diagonal
     if len(op.qubits) == 1:
@@ -109,12 +122,51 @@ def gate_matrices(circuit: Circuit, params: Tensor | None, dtype, device) -> lis
     return mats
 
 
-def simulate(circuit: Circuit, params: Tensor | None, state: Tensor) -> Tensor:
-    """Apply every gate of ``circuit`` to a batch of states. Differentiable via autograd."""
+def simulate(
+    circuit: Circuit, params: Tensor | None, state: Tensor, plan: list[Block] | None = None
+) -> Tensor:
+    """Apply every gate of ``circuit`` to a batch of states. Differentiable via autograd.
+
+    With a ``plan`` from :func:`qnnbench.sim.fusion.plan_fusion`, gates are
+    applied fused block by block; the result is the same up to rounding.
+    """
     mats = gate_matrices(circuit, params, state.dtype, state.device)
-    for op, mat in zip(circuit.ops, mats, strict=True):
-        state = apply(state, mat, op, circuit.n_qubits)
+    n = circuit.n_qubits
+    if plan is None:
+        for op, mat in zip(circuit.ops, mats, strict=True):
+            state = apply(state, mat, op, n)
+        return state
+    for block in plan:
+        if len(block.ops) == 1:
+            i = block.ops[0]
+            state = apply(state, mats[i], circuit.ops[i], n)
+        elif block.diagonal:
+            state = state * _fused_diagonal(circuit, mats, block, state)
+        else:
+            state = apply_kq(state, _fused_unitary(circuit, mats, block), block.qubits, n)
     return state
+
+
+def _fused_diagonal(circuit: Circuit, mats: list[Tensor], block: Block, like: Tensor) -> Tensor:
+    """Product of a run of diagonal gates as one (1, 2**n) phase vector."""
+    n = circuit.n_qubits
+    d = torch.ones(1, 2**n, dtype=like.dtype, device=like.device)
+    for i in block.ops:
+        d = apply(d, mats[i], circuit.ops[i], n)
+    return d
+
+
+def _fused_unitary(circuit: Circuit, mats: list[Tensor], block: Block) -> Tensor:
+    """Product of a block's gates as one 2**k x 2**k unitary on ``block.qubits``."""
+    k = len(block.qubits)
+    local = {q: j for j, q in enumerate(block.qubits)}
+    u = torch.eye(2**k, dtype=mats[0].dtype, device=mats[0].device)  # row j = |j>
+    for i in block.ops:
+        op = circuit.ops[i]
+        u = apply(
+            u, mats[i], Op(op.gate, tuple(local[q] for q in op.qubits), op.param, op.value), k
+        )
+    return u.transpose(0, 1)  # column j = U |j>
 
 
 def expect_z(state: Tensor, qubit: int, n: int) -> Tensor:
@@ -143,9 +195,9 @@ class _AdjointExpectation(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, params, state0, circuit, readout):
+    def forward(ctx, params, state0, circuit, readout, plan):
         with torch.no_grad():
-            final = simulate(circuit, params, state0)
+            final = simulate(circuit, params, state0, plan)
         ctx.save_for_backward(params, final)
         ctx.circuit, ctx.readout = circuit, readout
         return expect_z(final, readout, circuit.n_qubits)
@@ -172,7 +224,7 @@ class _AdjointExpectation(torch.autograd.Function):
                     grad[:, op.param] += 2 * (lam.conj() * mu).real.sum(dim=1)
                 lam = apply(lam, dagger(mat, gate.diagonal), op, n)
             grad_params = (grad_out[:, None].to(real) * grad).sum(dim=0)
-        return grad_params, None, None, None
+        return grad_params, None, None, None, None
 
 
 class _ParameterShiftExpectation(torch.autograd.Function):
@@ -184,11 +236,11 @@ class _ParameterShiftExpectation(torch.autograd.Function):
     """
 
     @staticmethod
-    def forward(ctx, params, state0, circuit, readout):
+    def forward(ctx, params, state0, circuit, readout, plan):
         with torch.no_grad():
-            out = expect_z(simulate(circuit, params, state0), readout, circuit.n_qubits)
+            out = expect_z(simulate(circuit, params, state0, plan), readout, circuit.n_qubits)
         ctx.save_for_backward(params, state0)
-        ctx.circuit, ctx.readout = circuit, readout
+        ctx.circuit, ctx.readout, ctx.plan = circuit, readout, plan
         return out
 
     @staticmethod
@@ -212,24 +264,35 @@ class _ParameterShiftExpectation(torch.autograd.Function):
                     )
                     ops[i] = shifted
                     c = Circuit(n, ops)
-                    evals.append(expect_z(simulate(c, params, state0), ctx.readout, n))
+                    # Shifting a value keeps the circuit structure, so the plan still applies.
+                    evals.append(expect_z(simulate(c, params, state0, ctx.plan), ctx.readout, n))
                 grad[:, op.param] += gate.shift_coeff * (evals[0] - evals[1]).to(params.dtype)
-        return (grad_out[:, None].to(params.dtype) * grad).sum(dim=0), None, None, None
+        return (grad_out[:, None].to(params.dtype) * grad).sum(dim=0), None, None, None, None
 
 
 GRAD_METHODS = ("autograd", "adjoint", "param_shift")
 
 
 def expectation(
-    circuit: Circuit, params: Tensor, state0: Tensor, readout: int, method: str = "autograd"
+    circuit: Circuit,
+    params: Tensor,
+    state0: Tensor,
+    readout: int,
+    method: str = "autograd",
+    plan: list[Block] | None = None,
 ) -> Tensor:
-    """<Z_readout> after running ``circuit`` on ``state0``, differentiable w.r.t. ``params``."""
+    """<Z_readout> after running ``circuit`` on ``state0``, differentiable w.r.t. ``params``.
+
+    ``plan`` (gate fusion) speeds up every forward simulation, including the
+    forward passes inside the adjoint and parameter-shift methods. The
+    adjoint backward pass always walks the individual gates.
+    """
     if method == "autograd":
-        return expect_z(simulate(circuit, params, state0), readout, circuit.n_qubits)
+        return expect_z(simulate(circuit, params, state0, plan), readout, circuit.n_qubits)
     if method == "adjoint":
-        return _AdjointExpectation.apply(params, state0, circuit, readout)
+        return _AdjointExpectation.apply(params, state0, circuit, readout, plan)
     if method == "param_shift":
-        return _ParameterShiftExpectation.apply(params, state0, circuit, readout)
+        return _ParameterShiftExpectation.apply(params, state0, circuit, readout, plan)
     raise ValueError(f"unknown gradient method {method!r}; choose from {GRAD_METHODS}")
 
 

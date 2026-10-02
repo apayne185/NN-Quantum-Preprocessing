@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from qnnbench.sim import basis_state, expectation, qnn_circuit
+from qnnbench.sim import basis_state, expectation, plan_fusion, qnn_circuit
 
 
 class QNN(nn.Module):
@@ -17,6 +17,9 @@ class QNN(nn.Module):
     Pixels are basis-encoded on qubits 1..16 and coupled to readout qubit 0 by
     one parameterised layer per entry of ``layers`` (XX then ZZ by default:
     32 parameters, identical to the original TFQ model).
+
+    ``fuse`` (max qubits per fused block, 0 = off) enables gate fusion for
+    every forward simulation; it changes speed, not results.
     """
 
     def __init__(
@@ -25,9 +28,11 @@ class QNN(nn.Module):
         layers: tuple[str, ...] = ("xx", "zz"),
         grad_method: str = "autograd",
         dtype: torch.dtype = torch.complex64,
+        fuse: int = 0,
     ):
         super().__init__()
         self.circuit = qnn_circuit(n_data, layers)
+        self.plan = plan_fusion(self.circuit, fuse) if fuse else None
         self.grad_method = grad_method
         self.dtype = dtype
         real = torch.float64 if dtype == torch.complex128 else torch.float32
@@ -36,7 +41,9 @@ class QNN(nn.Module):
 
     def forward(self, bits: torch.Tensor) -> torch.Tensor:
         state = basis_state(bits, self.circuit.n_qubits, offset=1, dtype=self.dtype)
-        return expectation(self.circuit, self.theta, state, readout=0, method=self.grad_method)
+        return expectation(
+            self.circuit, self.theta, state, readout=0, method=self.grad_method, plan=self.plan
+        )
 
 
 class FairMLP(nn.Module):
