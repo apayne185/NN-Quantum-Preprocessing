@@ -1,0 +1,245 @@
+{
+  "suite": "frameworks",
+  "env": {
+    "timestamp": "2026-10-02T15:43:57+00:00",
+    "git_sha": "3e2afbf",
+    "python": "3.12.13",
+    "torch": "2.14.1+cpu",
+    "device": "cpu",
+    "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+    "cpu_threads": 4
+  },
+  "measurements": [
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 9,
+        "framework": "qnnbench (fused)"
+      },
+      "times_ms": [
+        2.11947200295981,
+        2.051314000709681,
+        2.020920997892972,
+        2.001283002755372,
+        2.0166979993518908
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 2.020920997892972,
+      "p95_ms": 2.11947200295981,
+      "throughput": 15834.364645309464,
+      "std_ms": 0.04698678488342977
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 9,
+        "framework": "qnnbench (unfused)"
+      },
+      "times_ms": [
+        2.5652410004113335,
+        2.5381630002812017,
+        2.564697999332566,
+        2.543296002841089,
+        2.5414859992451966
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 2.543296002841089,
+      "p95_ms": 2.5652410004113335,
+      "throughput": 12582.098176638952,
+      "std_ms": 0.013268403571878851
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 9,
+        "framework": "pennylane"
+      },
+      "times_ms": [
+        6.448019998060772,
+        6.450172997574555,
+        6.380153001373401,
+        6.5030990008381195,
+        6.228035999811254
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 6.448019998060772,
+      "p95_ms": 6.5030990008381195,
+      "throughput": 4962.763764632233,
+      "std_ms": 0.1065366095824247
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 9,
+        "framework": "cirq"
+      },
+      "times_ms": [
+        86.42172300096718,
+        87.47109599789837,
+        80.52311799838208,
+        90.20753400182002,
+        79.00281399997766
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 86.42172300096718,
+      "p95_ms": 90.20753400182002,
+      "throughput": 370.27727391690485,
+      "std_ms": 4.766479725565949
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 13,
+        "framework": "qnnbench (fused)"
+      },
+      "times_ms": [
+        5.847040996741271,
+        5.813633997604484,
+        5.850303998158779,
+        5.781945001217537,
+        5.430286000773776
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 5.813633997604484,
+      "p95_ms": 5.850303998158779,
+      "throughput": 5504.302474697521,
+      "std_ms": 0.17791930493297708
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 13,
+        "framework": "qnnbench (unfused)"
+      },
+      "times_ms": [
+        8.048618998145685,
+        14.384805999725359,
+        9.416148997843266,
+        8.451641999272397,
+        9.01623100071447
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 9.01623100071447,
+      "p95_ms": 14.384805999725359,
+      "throughput": 3549.1548516740795,
+      "std_ms": 2.5810526769121664
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 13,
+        "framework": "pennylane"
+      },
+      "times_ms": [
+        34.488799999962794,
+        37.196353001490934,
+        49.298604997602524,
+        50.773236998793436,
+        50.41015800088644
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 49.298604997602524,
+      "p95_ms": 50.773236998793436,
+      "throughput": 649.1055883134262,
+      "std_ms": 7.919206201631168
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 13,
+        "framework": "cirq"
+      },
+      "times_ms": [
+        220.97930900054052,
+        233.6622940019879,
+        194.20785900001647,
+        156.17638700132375,
+        142.50850600001286
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 194.20785900001647,
+      "p95_ms": 233.6622940019879,
+      "throughput": 164.77191069799747,
+      "std_ms": 39.629794658238765
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 17,
+        "framework": "qnnbench (fused)"
+      },
+      "times_ms": [
+        230.886992001615,
+        237.61076200025855,
+        199.52697699773125,
+        192.75104499683948,
+        171.87049400308752
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 199.52697699773125,
+      "p95_ms": 237.61076200025855,
+      "throughput": 160.37931552666114,
+      "std_ms": 27.383663520429074
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 17,
+        "framework": "qnnbench (unfused)"
+      },
+      "times_ms": [
+        659.5559939996747,
+        676.9779970018135,
+        619.0320530004101,
+        763.0044189972978,
+        704.4358070015733
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 676.9779970018135,
+      "p95_ms": 763.0044189972978,
+      "throughput": 47.268892256057,
+      "std_ms": 53.6776605997193
+    },
+    {
+      "suite": "frameworks",
+      "case": {
+        "n_qubits": 17,
+        "framework": "pennylane"
+      },
+      "times_ms": [
+        1405.2835000002233,
+        1544.480967000709,
+        1432.9006410007423,
+        1476.7174209991936,
+        1305.7833220009343
+      ],
+      "items_per_call": 32,
+      "peak_mem_bytes": null,
+      "extra": {},
+      "p50_ms": 1432.9006410007423,
+      "p95_ms": 1544.480967000709,
+      "throughput": 22.33232304066184,
+      "std_ms": 88.44703331159452
+    }
+  ]
+}
