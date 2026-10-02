@@ -1,1 +1,28 @@
-./quantum_env
+# Virtual environments
+.venv/
+venv/
+quantum_env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+build/
+dist/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Data and run artifacts (benchmark results under results/ are committed on purpose)
+data/
+runs/
+*.pt
+*.npz
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
