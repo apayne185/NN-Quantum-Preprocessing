@@ -6,13 +6,6 @@ import sympy
 import numpy as np
 import collections
 
-# visualization tools
-# %matplotlib inline
-import matplotlib.pyplot as plt
-from cirq.contrib.svg import SVGCircuit
-from IPython.display import display
-
-
 
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -37,17 +30,11 @@ x_test, y_test = filter_36(x_test, y_test)
 print("\nMNIST Dataset reduced to 3, 6 samples and the label (y) is converted to bool")
 print("Number of reduced training examples:", len(x_train))
 print("Number of reduced test examples:", len(x_test))
-print(y_train[0])
-plt.imshow(x_train[0, :, :, 0])
-plt.colorbar()
 
 
 x_train_small = tf.image.resize(x_train, (4,4)).numpy()
 x_test_small = tf.image.resize(x_test, (4,4)).numpy()
 print("MNIST Dataset examples downsized from 28x28 to 4x4 pixels")
-print(y_train[0])
-plt.imshow(x_train_small[0,:,:,0], vmin=0, vmax=1)
-plt.colorbar()
 
 
 
@@ -116,16 +103,25 @@ def convert_to_circuit(image):
 x_train_circ = [convert_to_circuit(x) for x in x_train_bin]
 x_test_circ = [convert_to_circuit(x) for x in x_test_bin]
 
-print("Cirq Circuit visualization of 1st Data Sample in preprocessed dataset")
-display(SVGCircuit(x_train_circ[0]))
-
-
-bin_img = x_train_bin[0,:,:,0]
-indices = np.array(np.where(bin_img)).T
-print("Code visualization of 1st Data Sample")
-print(indices)
-
-
 x_train_tfcirc = tfq.convert_to_tensor(x_train_circ)
 x_test_tfcirc = tfq.convert_to_tensor(x_test_circ)
 print("Circuits converted to tensors for QNN. Preprocessing Done.")
+
+
+if __name__ == "__main__":
+    # Visual sanity checks, only when run directly so importing this module
+    # has no plotting or IPython side effects.
+    import matplotlib.pyplot as plt
+
+    print("First training label (True = 3):", y_train[0])
+    fig, (ax_full, ax_small) = plt.subplots(1, 2)
+    ax_full.imshow(x_train[0, :, :, 0])
+    ax_full.set_title("28x28")
+    ax_small.imshow(x_train_small[0, :, :, 0], vmin=0, vmax=1)
+    ax_small.set_title("4x4")
+    plt.show()
+
+    print("Cirq circuit of the 1st data sample:")
+    print(x_train_circ[0])
+    print("Pixels above threshold in the 1st data sample:")
+    print(np.array(np.where(x_train_bin[0, :, :, 0])).T)

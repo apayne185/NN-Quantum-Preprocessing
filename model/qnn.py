@@ -1,10 +1,8 @@
 import cirq
-from cirq.contrib.svg import SVGCircuit
 import sympy
 import tensorflow as tf
 import tensorflow_quantum as tfq
 from model.data_preprocess import y_test, y_train_nocon
-from IPython.display import display
 
 
 class CircuitLayerBuilder():
@@ -16,16 +14,6 @@ class CircuitLayerBuilder():
         for i, qubit in enumerate(self.data_qubits):
             symbol = sympy.Symbol(prefix + '-' + str(i))
             circuit.append(gate(qubit, self.readout)**symbol)
-
-
-demo_builder = CircuitLayerBuilder(data_qubits = cirq.GridQubit.rect(4,1),
-                                   readout=cirq.GridQubit(-1,-1))
-
-circuit = cirq.Circuit()
-demo_builder.add_layer(circuit, gate = cirq.XX, prefix='xx')
-print("Demo Quantum Circuit Layer")
-display(SVGCircuit(circuit))
-
 
 
 def create_quantum_model():
@@ -94,3 +82,12 @@ print("QNN Model-circuit wrapped in a tfq-keras model.")
 print("Hinge Accuracy Utilized.")
 print("Model Summary.")
 print(model.summary())
+
+
+if __name__ == "__main__":
+    demo_builder = CircuitLayerBuilder(data_qubits=cirq.GridQubit.rect(4, 1),
+                                       readout=cirq.GridQubit(-1, -1))
+    demo_circuit = cirq.Circuit()
+    demo_builder.add_layer(demo_circuit, gate=cirq.XX, prefix='xx')
+    print("Demo Quantum Circuit Layer")
+    print(demo_circuit)
