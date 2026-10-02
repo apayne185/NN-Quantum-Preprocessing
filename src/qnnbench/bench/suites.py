@@ -317,6 +317,28 @@ def suite_kernels(device, quick: bool) -> list[Measurement]:
     return out
 
 
+def suite_quanv(device, quick: bool) -> list[Measurement]:
+    """Quanvolution throughput: gate-by-gate vs fused unitary, chunk size, copy overlap."""
+    import numpy as np
+
+    from qnnbench.quanv import QuanvConfig, Quanvolution, quanvolve_dataset
+
+    n_images = 256 if quick else 4096
+    images = np.random.default_rng(0).integers(0, 256, size=(n_images, 28, 28), dtype=np.uint8)
+    cases = [("gates", 1024, False), *(("fused", c, False) for c in (256, 1024, 4096))]
+    if device.type == "cuda":
+        cases += [("fused", c, True) for c in (256, 1024, 4096)]
+    out = []
+    for mode, chunk, overlap in cases:
+        filt = Quanvolution(QuanvConfig(), mode, device)
+        m = measure(lambda: quanvolve_dataset(images, filt, chunk, overlap), suite="quanv",
+                    case={"mode": mode, "chunk": chunk, "overlap": overlap},
+                    device=device, items_per_call=n_images, warmup=1, repeats=5)  # fmt: skip
+        m.extra["circuits_per_s"] = m.throughput * 196
+        out.append(m)
+    return out
+
+
 SUITES: dict[str, Callable[[torch.device, bool], list[Measurement]]] = {
     "qubits": suite_qubits,
     "batch": suite_batch,
@@ -326,4 +348,5 @@ SUITES: dict[str, Callable[[torch.device, bool], list[Measurement]]] = {
     "exec": suite_exec,
     "frameworks": suite_frameworks,
     "kernels": suite_kernels,
+    "quanv": suite_quanv,
 }
