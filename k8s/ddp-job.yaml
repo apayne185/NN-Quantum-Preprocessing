@@ -1,0 +1,45 @@
+# Data-parallel training of the hybrid model on one node with 2 GPUs.
+# torchrun starts one process per GPU; gradients are all-reduced over NCCL.
+# Multi-node runs need a rendezvous across pods (e.g. a Kubeflow PyTorchJob);
+# the training code itself does not change.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qnnbench-ddp
+  labels: {app: qnnbench, component: train}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels: {app: qnnbench, component: train}
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+      containers:
+        - name: train
+          image: ghcr.io/apayne185/qnnbench:latest
+          command:
+            - torchrun
+            - --standalone
+            - --nproc-per-node=2
+            - -m
+            - qnnbench.hybrid
+            - --features=quanv
+            - --epochs=5
+            - --out=/results/hybrid-ddp.json
+          env:
+            - {name: NCCL_DEBUG, value: WARN}
+          resources:
+            requests: {cpu: "8", memory: 32Gi}
+            limits: {nvidia.com/gpu: 2, memory: 32Gi}
+          volumeMounts:
+            - {name: results, mountPath: /results}
+            # DataLoader workers pass batches through shared memory; the
+            # container default /dev/shm (64 MiB) is too small.
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: results
+          persistentVolumeClaim: {claimName: qnnbench-results}
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 2Gi}

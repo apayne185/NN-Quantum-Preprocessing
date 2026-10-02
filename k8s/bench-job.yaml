@@ -1,0 +1,45 @@
+# Runs the full benchmark suite once on a single GPU node.
+#   kubectl apply -f k8s/bench-job.yaml && kubectl logs -f job/qnnbench-bench
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qnnbench-bench
+  labels: {app: qnnbench, component: bench}
+spec:
+  backoffLimit: 0                 # a failed benchmark should be looked at, not retried
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels: {app: qnnbench, component: bench}
+    spec:
+      restartPolicy: Never
+      # GPU nodes are usually tainted so only GPU workloads land on them.
+      tolerations:
+        - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+      # Pin a GPU type to compare hardware, e.g. run once per product:
+      # nodeSelector:
+      #   nvidia.com/gpu.product: NVIDIA-L4
+      containers:
+        - name: bench
+          image: ghcr.io/apayne185/qnnbench:latest
+          command: ["python", "-m", "qnnbench.bench", "all", "--out", "/results"]
+          resources:
+            requests: {cpu: "4", memory: 16Gi}
+            limits: {nvidia.com/gpu: 1, memory: 16Gi}
+          volumeMounts:
+            - {name: results, mountPath: /results}
+            - {name: data, mountPath: /app/data}
+      volumes:
+        - name: results
+          persistentVolumeClaim: {claimName: qnnbench-results}
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qnnbench-results
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests: {storage: 1Gi}

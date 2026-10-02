@@ -9,7 +9,6 @@ description = "Batched PyTorch state-vector simulation of quantum neural network
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Anna Payne" }]
-license = { text = "MIT" }
 dependencies = [
     "torch>=2.3",
     "numpy>=1.24",
