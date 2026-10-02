@@ -11,14 +11,13 @@ concurrency:
 
 env:
   # CPU wheels: CI has no GPU, and the CUDA wheels are ~2 GB larger.
-  UV_EXTRA_INDEX_URL: https://download.pytorch.org/whl/cpu
-  UV_INDEX_STRATEGY: unsafe-best-match
+  TORCH_INDEX: https://download.pytorch.org/whl/cpu
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v5
       - run: uvx ruff check src tests
       - run: uvx ruff format --check src tests
@@ -30,13 +29,14 @@ jobs:
       matrix:
         python: ["3.10", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python }}
+          activate-environment: true  # setup-uv creates and activates .venv
       - name: Install
         run: |
-          uv venv
+          uv pip install torch --index-url "$TORCH_INDEX"
           uv pip install -e ".[dev,serve]"
       - name: Cache MNIST
         uses: actions/cache@v4
@@ -44,29 +44,31 @@ jobs:
           path: data/mnist.npz
           key: mnist-731c5ac6
       - name: Tests
-        run: uv run --no-sync pytest -m "not slow"
+        run: python -m pytest -m "not slow"
       - name: Slow tests (quick benchmark suites, hybrid training)
-        run: uv run --no-sync pytest -m slow
+        run: python -m pytest -m slow
 
   bench-smoke:
     # Catches benchmark code that crashes. Timings on shared runners are too
     # noisy to gate on; use `qnnbench.bench.compare` on dedicated hardware.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
-      - run: |
-          uv venv
+          activate-environment: true
+      - name: Install
+        run: |
+          uv pip install torch --index-url "$TORCH_INDEX"
           uv pip install -e ".[dev,bench]"
-      - run: uv run --no-sync python -m qnnbench.bench qubits batch fusion grad dtype quanv --quick
+      - run: python -m qnnbench.bench qubits batch fusion grad dtype quanv --quick
 
   docker:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
