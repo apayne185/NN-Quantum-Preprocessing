@@ -1,5 +1,5 @@
-from model.qnn import y_train_hinge, model, y_test 
-from model.data_preprocess import x_train_tfcirc, x_test_tfcirc, y_test_hinge
+from model.qnn import y_train_hinge, y_test_hinge, model, y_test
+from model.data_preprocess import x_train_tfcirc, x_test_tfcirc
 
 
 
