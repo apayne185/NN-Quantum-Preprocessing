@@ -10,7 +10,10 @@ first, and runs them as one batch. ``MAX_BATCH=1`` disables batching for
 comparison (see :mod:`qnnbench.loadtest`).
 
 Configuration (environment): QNNBENCH_CHECKPOINT, QNNBENCH_DEVICE,
-QNNBENCH_MAX_BATCH (64), QNNBENCH_MAX_WAIT_MS (5), QNNBENCH_FUSE (5).
+QNNBENCH_MAX_BATCH (64), QNNBENCH_MAX_WAIT_MS (5), QNNBENCH_FUSE (5),
+QNNBENCH_TORCH_THREADS (CPU only; default: torch's choice). On CPU, leave
+a core free for the event loop: if torch's threads take every core, HTTP
+parsing stalls, requests reach the batcher late, and batches stay small.
 """
 
 from __future__ import annotations
@@ -113,6 +116,8 @@ class Stats:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     device = resolve_device(os.environ.get("QNNBENCH_DEVICE", "auto"))
+    if threads := os.environ.get("QNNBENCH_TORCH_THREADS"):
+        torch.set_num_threads(int(threads))
     model = load_model(
         os.environ.get("QNNBENCH_CHECKPOINT"), device, int(os.environ.get("QNNBENCH_FUSE", 5))
     )

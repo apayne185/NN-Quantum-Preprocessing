@@ -84,6 +84,7 @@ def main(argv=None):
     p.add_argument("--max-batch", type=int, nargs="+", default=[1, 64])
     p.add_argument("--concurrency", type=int, nargs="+", default=[1, 16, 64])
     p.add_argument("--requests", type=int, default=1000)
+    p.add_argument("--torch-threads", type=int, help="QNNBENCH_TORCH_THREADS for spawned servers")
     p.add_argument("--out", type=Path)
     args = p.parse_args(argv)
 
@@ -93,6 +94,8 @@ def main(argv=None):
         if args.spawn:
             port = args.url.rsplit(":", 1)[1]
             env = {**os.environ, "QNNBENCH_MAX_BATCH": str(max_batch)}
+            if args.torch_threads:
+                env["QNNBENCH_TORCH_THREADS"] = str(args.torch_threads)
             proc = subprocess.Popen(
                 [sys.executable, "-m", "uvicorn", "qnnbench.serve:app", "--port", port,
                  "--log-level", "warning"],
