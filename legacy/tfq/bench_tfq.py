@@ -93,10 +93,15 @@ def main():
               f"train step p50 {step[-1]['p50_ms']:.2f} ms")
 
     cpu = platform.processor() or platform.machine()
+    try:
+        with open("/proc/cpuinfo") as f:
+            cpu = next(ln.split(":", 1)[1].strip() for ln in f if ln.startswith("model name"))
+    except (OSError, StopIteration):
+        pass
     env = {"timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "python": platform.python_version(), "tensorflow": tf.__version__,
            "tfq": tfq.__version__, "device": "cpu", "device_name": cpu,
-           "hostname": platform.node()}
+           "cpu_threads": tf.config.threading.get_intra_op_parallelism_threads()}
     slug = "tfq-cpu-" + re.sub(r"[^a-z0-9]+", "-", cpu.lower()).strip("-")
     for suite, ms in (("frameworks", fwd), ("grad", step)):
         path = args.out.parent / suite / f"{slug}.json"

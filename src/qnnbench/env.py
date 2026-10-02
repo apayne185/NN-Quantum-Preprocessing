@@ -28,10 +28,21 @@ def git_sha() -> str | None:
         return None
 
 
+def cpu_model() -> str:
+    try:
+        with open("/proc/cpuinfo") as f:
+            for line in f:
+                if line.startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or platform.machine()
+
+
 def device_name(device: torch.device) -> str:
     if device.type == "cuda":
         return torch.cuda.get_device_name(device)
-    return platform.processor() or platform.machine()
+    return cpu_model()
 
 
 def env_info(device: torch.device) -> dict:
@@ -44,7 +55,6 @@ def env_info(device: torch.device) -> dict:
         "device": str(device),
         "device_name": device_name(device),
         "cpu_threads": torch.get_num_threads(),
-        "hostname": platform.node(),
     }
     if device.type == "cuda":
         props = torch.cuda.get_device_properties(device)
