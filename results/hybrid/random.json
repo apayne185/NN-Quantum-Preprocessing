@@ -1,0 +1,82 @@
+{
+  "config": {
+    "features": "random",
+    "epochs": 5,
+    "batch_size": 128,
+    "accum_steps": 1,
+    "lr": 0.002,
+    "train_size": 60000,
+    "amp": "auto",
+    "compile": false,
+    "num_workers": 0,
+    "seed": 0,
+    "quantize": true
+  },
+  "world_size": 1,
+  "amp_dtype": "None",
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.35533639788627625,
+      "test_acc": 0.9735999703407288,
+      "epoch_time_s": 7.535384761999012,
+      "samples_per_s": 7949.693597876542,
+      "peak_mem_MB": null
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.08560667186975479,
+      "test_acc": 0.9842000007629395,
+      "epoch_time_s": 7.303569711999444,
+      "samples_per_s": 8202.016597661875,
+      "peak_mem_MB": null
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.06047830730676651,
+      "test_acc": 0.98580002784729,
+      "epoch_time_s": 7.610447636998288,
+      "samples_per_s": 7871.284694053467,
+      "peak_mem_MB": null
+    },
+    {
+      "epoch": 4,
+      "train_loss": 0.04621344059705734,
+      "test_acc": 0.9860000014305115,
+      "epoch_time_s": 7.385308850000001,
+      "samples_per_s": 8111.238299803805,
+      "peak_mem_MB": null
+    },
+    {
+      "epoch": 5,
+      "train_loss": 0.03957480564713478,
+      "test_acc": 0.989300012588501,
+      "epoch_time_s": 6.994001699000364,
+      "samples_per_s": 8565.053681437043,
+      "peak_mem_MB": null
+    }
+  ],
+  "env": {
+    "timestamp": "2026-10-02T16:43:47+00:00",
+    "git_sha": "98f8f57",
+    "python": "3.12.13",
+    "torch": "2.14.1+cpu",
+    "device": "cpu",
+    "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+    "cpu_threads": 4
+  },
+  "quantization": {
+    "fp32": {
+      "acc_2k": 0.9819999933242798,
+      "size_MB": 0.36523914337158203,
+      "cpu_latency_ms_b1": 0.20599390009010676,
+      "cpu_latency_ms_b256": 10.575404449991765
+    },
+    "int8": {
+      "acc_2k": 0.9819999933242798,
+      "size_MB": 0.15203189849853516,
+      "cpu_latency_ms_b1": 0.3429766500630649,
+      "cpu_latency_ms_b256": 10.627692100024433
+    }
+  }
+}

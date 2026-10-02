@@ -1,0 +1,68 @@
+[
+  {
+    "concurrency": 1,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 67.54773209994649,
+    "p50_ms": 14.703463999467203,
+    "p95_ms": 17.20595400183811,
+    "p99_ms": 19.535796000127448,
+    "server_metrics": "qnnbench_requests_total 600\nqnnbench_errors_total 0\nqnnbench_batches_total 600\nqnnbench_latency_ms{quantile=\"0.5\"} 12.093\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 14.210\nqnnbench_batch_size{quantile=\"0.95\"} 1\nqnnbench_latency_ms{quantile=\"0.99\"} 16.022\nqnnbench_batch_size{quantile=\"0.99\"} 1\n",
+    "max_batch": 1
+  },
+  {
+    "concurrency": 16,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 74.9270428172541,
+    "p50_ms": 211.66846949927276,
+    "p95_ms": 236.46611299773213,
+    "p99_ms": 253.39955600065878,
+    "server_metrics": "qnnbench_requests_total 1200\nqnnbench_errors_total 0\nqnnbench_batches_total 1200\nqnnbench_latency_ms{quantile=\"0.5\"} 17.616\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 223.236\nqnnbench_batch_size{quantile=\"0.95\"} 1\nqnnbench_latency_ms{quantile=\"0.99\"} 240.993\nqnnbench_batch_size{quantile=\"0.99\"} 1\n",
+    "max_batch": 1
+  },
+  {
+    "concurrency": 64,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 71.56595810635581,
+    "p50_ms": 873.8711850019172,
+    "p95_ms": 937.7490879996913,
+    "p99_ms": 967.1850730010192,
+    "server_metrics": "qnnbench_requests_total 1800\nqnnbench_errors_total 0\nqnnbench_batches_total 1800\nqnnbench_latency_ms{quantile=\"0.5\"} 207.801\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 907.767\nqnnbench_batch_size{quantile=\"0.95\"} 1\nqnnbench_latency_ms{quantile=\"0.99\"} 937.825\nqnnbench_batch_size{quantile=\"0.99\"} 1\n",
+    "max_batch": 1
+  },
+  {
+    "concurrency": 1,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 53.40362847728827,
+    "p50_ms": 18.884664999859524,
+    "p95_ms": 21.40667399726226,
+    "p99_ms": 22.659676000330364,
+    "server_metrics": "qnnbench_requests_total 600\nqnnbench_errors_total 0\nqnnbench_batches_total 600\nqnnbench_latency_ms{quantile=\"0.5\"} 16.447\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 18.632\nqnnbench_batch_size{quantile=\"0.95\"} 1\nqnnbench_latency_ms{quantile=\"0.99\"} 19.744\nqnnbench_batch_size{quantile=\"0.99\"} 1\n",
+    "max_batch": 64
+  },
+  {
+    "concurrency": 16,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 177.82160540305475,
+    "p50_ms": 87.75133999915852,
+    "p95_ms": 118.19183999978122,
+    "p99_ms": 137.36195000092266,
+    "server_metrics": "qnnbench_requests_total 1200\nqnnbench_errors_total 0\nqnnbench_batches_total 677\nqnnbench_latency_ms{quantile=\"0.5\"} 21.382\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 77.005\nqnnbench_batch_size{quantile=\"0.95\"} 8\nqnnbench_latency_ms{quantile=\"0.99\"} 82.230\nqnnbench_batch_size{quantile=\"0.99\"} 8\n",
+    "max_batch": 64
+  },
+  {
+    "concurrency": 64,
+    "requests": 600,
+    "errors": 0,
+    "throughput_rps": 71.71447883680656,
+    "p50_ms": 609.5222980002291,
+    "p95_ms": 2271.314997000445,
+    "p99_ms": 4269.052974999795,
+    "server_metrics": "qnnbench_requests_total 1800\nqnnbench_errors_total 0\nqnnbench_batches_total 960\nqnnbench_latency_ms{quantile=\"0.5\"} 27.487\nqnnbench_batch_size{quantile=\"0.5\"} 1\nqnnbench_latency_ms{quantile=\"0.95\"} 319.793\nqnnbench_batch_size{quantile=\"0.95\"} 8\nqnnbench_latency_ms{quantile=\"0.99\"} 445.533\nqnnbench_batch_size{quantile=\"0.99\"} 8\n",
+    "max_batch": 64
+  }
+]
