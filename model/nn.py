@@ -1,10 +1,16 @@
 import tensorflow as tf
-from model.qnn import y_train_hinge, model, y_test 
-from model.data_preprocess import y_train_nocon, x_test_bin, x_train_bin
+from model.data_preprocess import y_train_nocon, y_test, x_test_bin, x_train_bin
 
 
+EPOCHS = 3
+BATCH_SIZE = 32
 
-def Fair_CNN_model():
+
+def fair_nn_model():
+    """37-parameter MLP on the same binarized 4x4 inputs the QNN sees.
+
+    This is a dense network, not a CNN: there are no convolutional layers.
+    """
     model = tf.keras.Sequential()
     model.add(tf.keras.layers.Flatten(input_shape=(4,4,1)))
     model.add(tf.keras.layers.Dense(2, activation='relu'))
@@ -12,22 +18,22 @@ def Fair_CNN_model():
     return model
 
 
-model = Fair_CNN_model()
+model = fair_nn_model()
 model.compile(loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
               optimizer=tf.keras.optimizers.Adam(),
-              metrics=['accuracy'])
+              metrics=[tf.keras.metrics.BinaryAccuracy(threshold=0.0)])
 
 print("Classic NN model built.")
 print(model.summary())
 
 
-model.fit(x_train_bin,
+fair_nn_history = model.fit(x_train_bin,
           y_train_nocon,
-          batch_size=32,
-          epochs=3,
+          batch_size=BATCH_SIZE,
+          epochs=EPOCHS,
           verbose=1,
           validation_data=(x_test_bin, y_test))
 
-fair_cnn_results = model.evaluate(x_test_bin, y_test)
+fair_nn_results = model.evaluate(x_test_bin, y_test)
 print("Fair Classic NN model results.")
-print(fair_cnn_results)
+print(fair_nn_results)
