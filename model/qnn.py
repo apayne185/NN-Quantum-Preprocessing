@@ -56,15 +56,6 @@ model_circuit, model_readout = create_quantum_model()
 
 
 
-# Build the Keras model:
-model = tf.keras.Sequential([
-    # The input is the data-circuit (encoded as a tf.string):
-    tf.keras.layers.Input(shape=(), dtype=tf.string),
-    # The PQC layer returns the expected value of the readout gate (range [-1,1])
-    tfq.layers.PQC(model_circuit, model_readout),
-])
-
-print("QNN Model-circuit wrapped in a tfq-keras model.")
 y_train_hinge = 2.0*y_train_nocon-1.0
 y_test_hinge = 2.0*y_test-1.0
 
@@ -79,19 +70,27 @@ def hinge_accuracy(y_true, y_pred):
     return tf.reduce_mean(result)
 
 
-model.compile(
-    loss=tf.keras.losses.Hinge(),
-    optimizer=tf.keras.optimizers.Adam(),
-    metrics=[hinge_accuracy])
+def build_qnn():
+    """Build and compile a fresh QNN.
+
+    Each experiment must call this to get its own weights; reusing one model
+    object across runs silently warm-starts the second run.
+    """
+    model = tf.keras.Sequential([
+        # The input is the data-circuit (encoded as a tf.string):
+        tf.keras.layers.Input(shape=(), dtype=tf.string),
+        # The PQC layer returns the expected value of the readout gate (range [-1,1])
+        tfq.layers.PQC(model_circuit, model_readout),
+    ])
+    model.compile(
+        loss=tf.keras.losses.Hinge(),
+        optimizer=tf.keras.optimizers.Adam(),
+        metrics=[hinge_accuracy])
+    return model
 
 
+model = build_qnn()
+print("QNN Model-circuit wrapped in a tfq-keras model.")
 print("Hinge Accuracy Utilized.")
 print("Model Summary.")
 print(model.summary())
-
-
-
-
-
-
-
