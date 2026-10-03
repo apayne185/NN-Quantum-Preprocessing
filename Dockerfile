@@ -1,7 +1,7 @@
 # GPU image for benchmarks, training and serving.
 # The base image ships PyTorch built against the bundled CUDA runtime; the host
 # only needs an NVIDIA driver and the NVIDIA container toolkit.
-FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
 # torch.compile generates and compiles C/C++ launchers at runtime, so the
 # runtime image needs a host compiler.
