@@ -3,7 +3,7 @@
 TORCH_INDEX ?= https://download.pytorch.org/whl/cpu
 PY := .venv/bin/python
 
-.PHONY: install test test-all lint format bench bench-quick experiments hybrid serve loadtest docker legacy
+.PHONY: install test test-all lint format bench bench-quick profile experiments hybrid serve loadtest docker legacy
 
 install:
 	uv venv --python-preference only-managed --python 3.12 .venv
@@ -29,6 +29,9 @@ bench:            ## all suites on the default device; results/ <suite>/<device>
 
 bench-quick:
 	$(PY) -m qnnbench.bench all --quick
+
+profile:          ## torch.profiler trace of a training step -> runs/profile/trace.json
+	$(PY) -m qnnbench.profile
 
 experiments:      ## 5-seed accuracy comparison (paper protocol)
 	$(PY) -m qnnbench.experiments --seeds 5 --epochs 3
