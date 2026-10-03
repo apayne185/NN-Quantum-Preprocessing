@@ -73,11 +73,20 @@ is the best any model can do on this input. The MLP reaches that ceiling; the QN
 doesn't, and it varies more across seeds. This reverses the paper's single-run
 headline (see [below](#original-research-and-what-changed)).
 
-**Quanvolutional preprocessing** (full 10-class MNIST, 5 epochs, same CNN head,
-single seed): quantum filter **98.80%**, random classical 2x2 filter **98.93%**,
-learned 2x2 filter **98.97%**. The random classical control is the important
-row: here, the quantum filter adds nothing over a random projection of the same
-shape.
+**Quanvolutional preprocessing** (full 10-class MNIST, 5 epochs, same CNN head;
+only the 2x2 patch encoder differs):
+
+| Patch encoder | Test accuracy (5 seeds) | Range |
+|---|---|---|
+| Quantum filter (quanvolution) | 98.90% ± 0.19 | 98.66–99.13% |
+| Random classical 2x2 filter | 98.69% ± 0.25 | 98.40–98.99% |
+| Learned 2x2 filter | 98.83% ± 0.23 | 98.47–99.00% |
+
+No difference is statistically significant (Welch's t-test: quantum vs random
+p = 0.17, quantum vs learned p = 0.61). The random classical filter is the
+control that matters: with it, the quantum filter adds nothing measurable. A
+single seed is misleading here. The first single-seed run put the random filter
+*ahead* of the quantum one, and five seeds put it behind, both inside the noise.
 
 ## Running on a GPU
 
