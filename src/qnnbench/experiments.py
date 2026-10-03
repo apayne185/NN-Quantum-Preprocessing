@@ -52,7 +52,7 @@ def main(argv=None):
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / f"accuracy_{args.epochs}ep.json").write_text(
-        json.dumps({"summary": summary, "ceiling": ceiling, "runs": runs}, indent=2)
+        json.dumps({"summary": summary, "ceiling": ceiling, "runs": runs}, indent=2) + "\n"
     )
     (args.out / f"accuracy_{args.epochs}ep.md").write_text(table + "\n")
 

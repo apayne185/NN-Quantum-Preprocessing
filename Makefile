@@ -1,17 +1,25 @@
-# Common tasks. CPU-only torch keeps the local install small; on a GPU box,
-# install torch from PyPI (CUDA wheels) instead: `make install TORCH_INDEX=`.
-TORCH_INDEX ?= https://download.pytorch.org/whl/cpu
+# Common tasks. `make install` uses uv.lock (CPU-only PyTorch, as in CI).
+# On a GPU machine use `make install-gpu`: same packages, CUDA PyTorch from PyPI.
 PY := .venv/bin/python
+EXTRAS := --extra dev --extra bench --extra serve
 
-.PHONY: install test test-all lint format bench bench-quick profile experiments hybrid serve loadtest docker legacy
+.PHONY: install install-gpu hooks test coverage test-all lint format bench bench-quick profile experiments hybrid serve loadtest docker legacy
 
 install:
-	uv venv --python-preference only-managed --python 3.12 .venv
-	uv pip install --python $(PY) torch $(if $(TORCH_INDEX),--index-url $(TORCH_INDEX))
-	uv pip install --python $(PY) -e ".[dev,bench,serve]"
+	uv sync --locked $(EXTRAS)
+
+install-gpu:
+	uv venv --python 3.12 .venv
+	uv pip install --python $(PY) --no-sources -e ".[dev,bench,serve]"
+
+hooks:
+	uv run pre-commit install
 
 test:
 	$(PY) -m pytest -m "not slow"
+
+coverage:
+	$(PY) -m pytest --cov --cov-report=term --cov-report=html
 
 test-all:
 	$(PY) -m pytest
@@ -19,6 +27,7 @@ test-all:
 lint:
 	$(PY) -m ruff check src tests
 	$(PY) -m ruff format --check src tests
+	$(PY) -m mypy
 
 format:
 	$(PY) -m ruff format src tests

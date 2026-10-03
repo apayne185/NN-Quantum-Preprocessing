@@ -342,7 +342,7 @@ def main(argv=None):
     result = train(HybridConfig(**args))
     if out and int(os.environ.get("RANK", 0)) == 0:
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(result, indent=2))
+        out.write_text(json.dumps(result, indent=2) + "\n")
 
 
 if __name__ == "__main__":

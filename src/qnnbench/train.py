@@ -178,7 +178,7 @@ def main(argv=None):
     result = train(cfg, save_path=save)
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps(asdict(result), indent=2))
+        out.write_text(json.dumps(asdict(result), indent=2) + "\n")
     return result
 
 

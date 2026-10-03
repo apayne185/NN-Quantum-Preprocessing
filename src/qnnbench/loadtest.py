@@ -141,7 +141,7 @@ def main(argv=None):
                 proc.wait(timeout=30)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(rows, indent=2))
+        args.out.write_text(json.dumps(rows, indent=2) + "\n")
 
 
 if __name__ == "__main__":

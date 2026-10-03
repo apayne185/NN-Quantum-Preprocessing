@@ -73,7 +73,7 @@ def run(
     config = dict(n_qubits=n_qubits, batch=batch, fuse=fuse, grad_method=grad_method,
                   steps=steps)  # fmt: skip
     meta = {"config": config, "env": env_info(dev), "trace": str(trace)}
-    (out / "meta.json").write_text(json.dumps(meta, indent=2))
+    (out / "meta.json").write_text(json.dumps(meta, indent=2) + "\n")
     print(table)
     print(f"-> {trace} (open in https://ui.perfetto.dev)")
     return meta

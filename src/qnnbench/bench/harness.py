@@ -141,7 +141,7 @@ def save_results(
     path = Path(out_dir) / suite / f"{device_slug(env)}.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {"suite": suite, "env": env, "measurements": [m.to_dict() for m in measurements]}
-    path.write_text(json.dumps(payload, indent=2))
+    path.write_text(json.dumps(payload, indent=2) + "\n")
     return path
 
 
