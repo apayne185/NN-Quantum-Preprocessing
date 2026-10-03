@@ -50,7 +50,8 @@ environment metadata are in [`results/`](results).
   tails. Server metrics showed batches capped at about 8 and client p99 10× the
   server-side p99: the event loop, the load generator and torch's threads were
   fighting over 4 cores. Capping torch threads helped a little. This needs more
-  compute, not batch tuning.
+  compute, not batch tuning, and it led to the server's overload design: see
+  [Serving under overload](#serving-under-overload).
 - **int8 dynamic quantization of the hybrid model's Linear layers:** 2.4× smaller
   weights, same accuracy, but batch-1 CPU latency went *up* (0.24 → 0.35 ms).
   The model is small and conv-dominated, so quantizing activations on every call
@@ -97,19 +98,30 @@ types.
 | [`src/qnnbench/bench/`](src/qnnbench/bench) | Benchmark harness, 9 suites, regression checker, plots |
 | [`src/qnnbench/train.py`](src/qnnbench/train.py), [`experiments.py`](src/qnnbench/experiments.py) | QNN and baseline training; multi-seed accuracy comparison |
 | [`src/qnnbench/quanv.py`](src/qnnbench/quanv.py), [`hybrid.py`](src/qnnbench/hybrid.py) | Quanvolutional preprocessing and a hybrid CNN trainer (AMP, gradient accumulation, DDP, int8) |
-| [`src/qnnbench/serve.py`](src/qnnbench/serve.py), [`loadtest.py`](src/qnnbench/loadtest.py) | FastAPI inference with dynamic micro-batching; closed-loop load test |
+| [`src/qnnbench/serve.py`](src/qnnbench/serve.py), [`loadtest.py`](src/qnnbench/loadtest.py) | FastAPI inference: micro-batching, load shedding, deadlines, graceful drain, Prometheus metrics; load test |
+| [`src/qnnbench/profile.py`](src/qnnbench/profile.py) | `torch.profiler` traces of a training step with named circuit blocks (NVTX on CUDA) |
+| [`configs/`](configs), [`src/qnnbench/config.py`](src/qnnbench/config.py) | TOML run configs (paper protocol, hybrid, DDP + accumulation) |
 | [`tests/`](tests) | Simulator checked against Cirq; gradients against finite differences |
-| [`Dockerfile`](Dockerfile), [`k8s/`](k8s), [`.github/workflows/`](.github/workflows) | GPU image, benchmark/DDP/serving manifests, CI |
+| [`Dockerfile`](Dockerfile), [`k8s/`](k8s), [`.github/`](.github) | GPU image; serving, benchmark and DDP/multi-node manifests ([notes](k8s/README.md)); CI, image publishing, Dependabot |
 | [`legacy/tfq/`](legacy/tfq) | The original TensorFlow Quantum code, with the bugs fixed and documented |
 
 ## Quick start
 
 ```bash
-make install        # uv venv + CPU PyTorch; on a GPU box: make install TORCH_INDEX=
+make install        # locked deps (uv.lock), CPU PyTorch; on a GPU machine: make install-gpu
+make hooks          # pre-commit: ruff, mypy, lockfile and large-file checks on each commit
 make test           # under a minute on a laptop CPU
 make bench-quick    # every suite at small sizes
 make bench          # full suites -> results/<suite>/<device>.json
+make profile        # trace of one training step -> runs/profile/trace.json (Perfetto)
 python -m qnnbench.bench.plot   # -> docs/figures/
+```
+
+Runs are configured with TOML files; flags override the file:
+
+```bash
+python -m qnnbench.train --config configs/paper_protocol_qnn.toml --seed 3
+torchrun --nproc-per-node 2 -m qnnbench.hybrid --config configs/hybrid_ddp_accum.toml
 ```
 
 Run one suite on a GPU and compare two machines or commits:
@@ -118,6 +130,50 @@ Run one suite on a GPU and compare two machines or commits:
 python -m qnnbench.bench grad fusion --device cuda
 python -m qnnbench.bench.compare results/grad/old.json results/grad/new.json --tolerance 0.15
 ```
+
+## Engineering practices
+
+### Serving under overload
+
+Past saturation, every extra client only adds queueing delay, so an unbounded
+queue turns overload into unbounded latency at flat throughput. That's what the
+64-client CPU load test showed. The server now:
+
+- refuses excess connections at the HTTP layer (`uvicorn --limit-concurrency`),
+  where most of the waiting actually happened, before any parsing work;
+- bounds its batch queue and answers `503` + `Retry-After` immediately when it
+  is full;
+- gives each request a deadline and drops expired requests *before* inference
+  (`504`), so no GPU time goes to answers nobody is waiting for;
+- drains on shutdown: `/readyz` turns `503`, queued work finishes, then the
+  worker stops. Kubernetes pairs this with a `preStop` pause and a grace period
+  ([k8s notes](k8s/README.md)).
+
+### Observability
+
+JSON-lines logs (`QNNBENCH_LOG_FORMAT=json`) with structured fields; Prometheus
+histograms for request latency, batch size and per-batch inference time, plus
+outcome-labelled request counters (`ok`, `shed`, `timeout`, `invalid`, `error`)
+and a queue-depth gauge. The autoscaler scales on queue depth, not CPU.
+`python -m qnnbench.profile` produces a `torch.profiler` timeline with each gate
+and fused block as a named range (`--nvtx` for Nsight Systems on CUDA).
+
+### Quality gates (CI, on every PR)
+
+| Check | What it catches |
+|---|---|
+| ruff, `mypy --check-untyped-defs` | lint, formatting and type errors |
+| pytest on Python 3.10 and 3.12, coverage floor 70% | regressions; the simulator is checked against Cirq |
+| `uv sync --locked` | a lockfile out of date with `pyproject.toml` |
+| `pip-audit` on the locked set | dependencies with known vulnerabilities |
+| benchmark and profiler smoke runs | benchmark code that crashes (timings are gated on dedicated hardware with `qnnbench.bench.compare`, not on shared runners) |
+| `kubeconform -strict` | invalid Kubernetes manifests, including the Kubeflow CRD |
+| Docker build + Trivy | image build failures; image CVEs reported to the Security tab |
+
+**Supply chain:** dependencies are locked (`uv.lock`); GitHub Actions are
+pinned to commit SHAs; Dependabot opens weekly grouped updates, with PyTorch in
+its own PR so it can be benchmarked before merging. Images are published to GHCR
+as immutable `sha-<commit>` tags, and manifests pin a version, never `:latest`.
 
 ## Design notes
 
