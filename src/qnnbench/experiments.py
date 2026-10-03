@@ -1,10 +1,15 @@
 """Multi-seed accuracy comparison of the QNN, the fair MLP and the lookup-table ceiling.
 
     python -m qnnbench.experiments --seeds 5 --epochs 3
+    python -m qnnbench.experiments --suite hybrid --seeds 5 --epochs 5
 
-Reproduces the paper's protocol (3 epochs, batch 32, Adam 1e-3, the 500-example
+The default suite reproduces the paper's protocol (3 epochs, batch 32, Adam 1e-3, the 500-example
 "short" QNN) but with independent models, fixed seeds and mean +- std, and
 with the Bayes ceiling for the binarized 4x4 encoding reported alongside.
+
+The ``hybrid`` suite compares the quantum patch filter against its classical
+controls (random and learned 2x2 filters) on full MNIST over several seeds;
+a single seed cannot separate differences of a few tenths of a percent.
 """
 
 from __future__ import annotations
@@ -32,11 +37,14 @@ def _mean_std(values: list[float]) -> tuple[float, float]:
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--suite", choices=["paper", "hybrid"], default="paper")
     p.add_argument("--seeds", type=int, default=5)
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--device", default="auto")
     p.add_argument("--out", type=Path, default=Path("results/experiments"))
     args = p.parse_args(argv)
+    if args.suite == "hybrid":
+        return run_hybrid(args.seeds, args.epochs, args.out)
 
     data = prepare_binary_mnist()
     ceiling = lookup_table_accuracy(data)
@@ -89,6 +97,55 @@ def summarize(
         f"| Lookup table (Bayes ceiling) | {ceiling['n_patterns']} patterns | "
         f"{100 * ceiling['test_acc']:.1f}% | deterministic |"
     )
+    return summary, "\n".join(lines)
+
+
+HYBRID_FEATURES = {
+    "Quantum filter (quanvolution)": "quanv",
+    "Random classical 2x2 filter": "random",
+    "Learned 2x2 filter": "learned",
+}
+
+
+def run_hybrid(seeds: int, epochs: int, out: Path) -> dict:
+    from qnnbench.hybrid import HybridConfig
+    from qnnbench.hybrid import train as train_hybrid
+
+    runs: dict[str, list[dict]] = {}
+    for name, features in HYBRID_FEATURES.items():
+        runs[name] = [
+            train_hybrid(
+                HybridConfig(
+                    features=features, epochs=epochs, seed=seed, num_workers=0, quantize=False
+                )
+            )  # fmt: skip
+            for seed in range(seeds)
+        ]
+    summary, table = summarize_hybrid(runs, seeds, epochs)
+    print("\n" + table)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / f"hybrid_{epochs}ep.json").write_text(
+        json.dumps({"summary": summary, "runs": runs}, indent=2) + "\n"
+    )
+    (out / f"hybrid_{epochs}ep.md").write_text(table + "\n")
+    return summary
+
+
+def summarize_hybrid(runs: dict[str, list[dict]], seeds: int, epochs: int) -> tuple[dict, str]:
+    summary = {}
+    lines = [
+        f"| Patch encoder | Test accuracy ({seeds} seeds, {epochs} epochs) | Range |",
+        "|---|---|---|",
+    ]
+    for name, results in runs.items():
+        accs = [r["history"][-1]["test_acc"] for r in results]
+        mean, std = _mean_std(accs)
+        summary[name] = {"test_acc_mean": mean, "test_acc_std": std,
+                         "test_acc_min": min(accs), "test_acc_max": max(accs)}  # fmt: skip
+        lines.append(
+            f"| {name} | {100 * mean:.2f}% ± {100 * std:.2f} | "
+            f"{100 * min(accs):.2f}–{100 * max(accs):.2f}% |"
+        )
     return summary, "\n".join(lines)
 
 

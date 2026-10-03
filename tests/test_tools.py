@@ -93,3 +93,12 @@ def test_text_formatter_and_configure():
     with pytest.raises(ValueError):
         configure_logging("xml")
     configure_logging("text", "INFO")
+
+
+def test_summarize_hybrid_table():
+    from qnnbench.experiments import summarize_hybrid
+
+    runs = {"Quantum filter": [_run(0.988), _run(0.990)], "Random": [_run(0.989)]}
+    summary, table = summarize_hybrid(runs, seeds=2, epochs=5)
+    assert summary["Quantum filter"]["test_acc_mean"] == pytest.approx(0.989)
+    assert "| Quantum filter | 98.90% ± 0.14 | 98.80–99.00% |" in table
