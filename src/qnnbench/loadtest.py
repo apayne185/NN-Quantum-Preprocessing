@@ -24,7 +24,10 @@ from pathlib import Path
 import httpx
 
 
-async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
+async def run_load(
+    url: str, concurrency: int, n_requests: int, transport: httpx.AsyncBaseTransport | None = None
+) -> dict:
+    """Closed loop: ``concurrency`` clients, each sending its next request on a response."""
     latencies: list[float] = []
     errors = 0
     status_counts: dict[int, int] = {}
@@ -49,7 +52,7 @@ async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
                 errors += 1
 
     limits = httpx.Limits(max_connections=concurrency)
-    async with httpx.AsyncClient(timeout=60, limits=limits) as http:
+    async with httpx.AsyncClient(timeout=60, limits=limits, transport=transport) as http:
         t0 = time.perf_counter()
         await asyncio.gather(*(client(http) for _ in range(concurrency)))
         elapsed = time.perf_counter() - t0

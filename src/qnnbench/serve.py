@@ -37,6 +37,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, fields
+from typing import Any
 
 import torch
 from fastapi import FastAPI, HTTPException, Response
@@ -76,7 +77,7 @@ class Settings:
 
     @classmethod
     def from_env(cls, env=os.environ) -> Settings:
-        values = {}
+        values: dict[str, Any] = {}
         for f in fields(cls):
             raw = env.get(f"QNNBENCH_{f.name.upper()}")
             if raw is None or raw == "":

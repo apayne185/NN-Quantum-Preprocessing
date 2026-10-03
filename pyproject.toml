@@ -17,6 +17,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
+    "pytest-cov>=5",
+    "mypy>=1.10",
     "ruff>=0.5",
     "cirq-core>=1.3",   # reference simulator for correctness tests
 ]
@@ -46,6 +48,25 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 [tool.ruff.lint.per-file-ignores]
 # Suites build closures over loop variables and call them within the same iteration.
 "src/qnnbench/bench/suites.py" = ["B023"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+check_untyped_defs = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+ignore_missing_imports = true  # cirq, pennylane, prometheus_client ship partial or no stubs
+
+[tool.coverage.run]
+source = ["qnnbench"]
+branch = true
+omit = ["*/__main__.py"]
+
+[tool.coverage.report]
+# CUDA-only branches (streams, CUDA events, NCCL) cannot run on CPU CI runners.
+fail_under = 70
+show_missing = true
+skip_covered = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -169,7 +169,9 @@ def train(cfg: HybridConfig, log=print) -> dict:
     if world > 1 and is_main:
         dist.barrier()
 
-    sampler = DistributedSampler(train_ds, seed=cfg.seed) if world > 1 else None
+    sampler: DistributedSampler | None = (
+        DistributedSampler(train_ds, seed=cfg.seed) if world > 1 else None
+    )
     pin = device.type == "cuda"
     loader = DataLoader(
         train_ds,
@@ -182,11 +184,15 @@ def train(cfg: HybridConfig, log=print) -> dict:
         drop_last=True,
     )
 
-    model = build_model(cfg.features).to(device)
-    if world > 1:
-        model = nn.parallel.DistributedDataParallel(
-            model, device_ids=[device.index] if device.type == "cuda" else None
+    net = build_model(cfg.features).to(device)
+    ddp = (
+        nn.parallel.DistributedDataParallel(
+            net, device_ids=[device.index] if device.type == "cuda" else None
         )
+        if world > 1
+        else None
+    )
+    model: nn.Module = ddp or net  # what we train; `net` stays the unwrapped module
     forward = torch.compile(model) if cfg.compile else model
     params = [p for p in model.parameters() if p.requires_grad]
     opt = torch.optim.AdamW(params, lr=cfg.lr)
@@ -210,7 +216,7 @@ def train(cfg: HybridConfig, log=print) -> dict:
             yb = yb.to(device, non_blocking=pin)
             last_micro = (step + 1) % cfg.accum_steps == 0
             # Skip DDP's gradient all-reduce on all but the last micro-batch.
-            sync = contextlib.nullcontext() if last_micro or world == 1 else model.no_sync()
+            sync = ddp.no_sync() if ddp is not None and not last_micro else contextlib.nullcontext()
             with sync:
                 with torch.autocast(device.type, dtype=dtype or torch.float32, enabled=bool(dtype)):
                     loss = F.cross_entropy(forward(xb), yb)
@@ -251,8 +257,7 @@ def train(cfg: HybridConfig, log=print) -> dict:
         "env": env_info(device),
     }
     if is_main and cfg.quantize:
-        plain = model.module if world > 1 else model
-        result["quantization"] = quantize_and_compare(plain, test_ds, cfg)
+        result["quantization"] = quantize_and_compare(net, test_ds, cfg)
         say(f"[{cfg.features}] int8: {json.dumps(result['quantization'])}")
     if world > 1:
         dist.destroy_process_group()
@@ -325,11 +330,11 @@ def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     for f in HybridConfig.__dataclass_fields__.values():
         flag = f"--{f.name.replace('_', '-')}"
-        if f.type == "bool":
+        if str(f.type) == "bool":
             p.add_argument(flag, action=argparse.BooleanOptionalAction, default=f.default)
         else:
             p.add_argument(
-                flag, type={"int": int, "float": float}.get(f.type, str), default=f.default
+                flag, type={"int": int, "float": float}.get(str(f.type), str), default=f.default
             )
     p.add_argument("--out", type=Path, help="write the run as JSON (rank 0)")
     args = vars(p.parse_args(argv))

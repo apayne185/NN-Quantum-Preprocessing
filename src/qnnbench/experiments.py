@@ -14,11 +14,12 @@ import json
 import statistics
 from dataclasses import asdict
 from pathlib import Path
+from typing import Any
 
 from qnnbench.data import prepare_binary_mnist
 from qnnbench.train import TrainConfig, lookup_table_accuracy, train
 
-RUNS = {
+RUNS: dict[str, dict[str, Any]] = {
     "QNN (500 examples)": dict(model="qnn", num_train=500),
     "QNN": dict(model="qnn"),
     "Fair MLP": dict(model="mlp"),
@@ -46,6 +47,20 @@ def main(argv=None):
             cfg = TrainConfig(epochs=args.epochs, seed=seed, device=args.device, **overrides)
             runs[name].append(asdict(train(cfg, data)))
 
+    summary, table = summarize(runs, ceiling, args.seeds, args.epochs)
+    print("\n" + table)
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    (args.out / f"accuracy_{args.epochs}ep.json").write_text(
+        json.dumps({"summary": summary, "ceiling": ceiling, "runs": runs}, indent=2)
+    )
+    (args.out / f"accuracy_{args.epochs}ep.md").write_text(table + "\n")
+
+
+def summarize(
+    runs: dict[str, list[dict]], ceiling: dict, seeds: int, epochs: int
+) -> tuple[dict, str]:
+    """Per-model accuracy statistics and the markdown table for the README."""
     summary = {}
     for name, results in runs.items():
         accs = [r["history"][-1]["test_acc"] for r in results]
@@ -61,7 +76,7 @@ def main(argv=None):
         }
 
     lines = [
-        f"| Model | Params | Test accuracy ({args.seeds} seeds, {args.epochs} epochs) | Range |",
+        f"| Model | Params | Test accuracy ({seeds} seeds, {epochs} epochs) | Range |",
         "|---|---|---|---|",
     ]
     for name, s in summary.items():
@@ -74,14 +89,7 @@ def main(argv=None):
         f"| Lookup table (Bayes ceiling) | {ceiling['n_patterns']} patterns | "
         f"{100 * ceiling['test_acc']:.1f}% | deterministic |"
     )
-    table = "\n".join(lines)
-    print("\n" + table)
-
-    args.out.mkdir(parents=True, exist_ok=True)
-    (args.out / f"accuracy_{args.epochs}ep.json").write_text(
-        json.dumps({"summary": summary, "ceiling": ceiling, "runs": runs}, indent=2)
-    )
-    (args.out / f"accuracy_{args.epochs}ep.md").write_text(table + "\n")
+    return summary, "\n".join(lines)
 
 
 if __name__ == "__main__":

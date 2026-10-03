@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import time
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -64,7 +65,10 @@ def hinge_loss(pred: torch.Tensor, y_pm1: torch.Tensor) -> torch.Tensor:
     return torch.clamp(1 - pred * y_pm1, min=0).mean()
 
 
-def build_model(cfg: TrainConfig) -> tuple[nn.Module, callable]:
+LossFn = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+
+
+def build_model(cfg: TrainConfig) -> tuple[nn.Module, LossFn]:
     """Return the model and its loss; both models take labels in {-1, +1}."""
     if cfg.model == "qnn":
         model = QNN(grad_method=cfg.grad_method, dtype=getattr(torch, cfg.dtype), fuse=cfg.fuse)
@@ -161,10 +165,10 @@ def lookup_table_accuracy(data=None) -> dict:
 def main(argv=None):
     p = argparse.ArgumentParser(description="Train the QNN or the fair MLP baseline.")
     for f in TrainConfig.__dataclass_fields__.values():
-        if f.type == "bool":
+        if str(f.type) == "bool":
             p.add_argument(f"--{f.name.replace('_', '-')}", action="store_true")
         else:
-            caster = {"int": int, "float": float, "int | None": int}.get(f.type, str)
+            caster = {"int": int, "float": float, "int | None": int}.get(str(f.type), str)
             p.add_argument(f"--{f.name.replace('_', '-')}", type=caster, default=f.default)
     p.add_argument("--out", type=Path, help="write the run (config, history, env) as JSON")
     p.add_argument("--save", type=Path, help="save the trained weights (state_dict)")
