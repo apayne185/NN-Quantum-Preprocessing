@@ -3,7 +3,7 @@
 PY := .venv/bin/python
 EXTRAS := --extra dev --extra bench --extra serve
 
-.PHONY: install install-gpu hooks test coverage test-all lint format bench bench-quick profile experiments hybrid serve loadtest docker legacy
+.PHONY: install install-gpu hooks test coverage test-all lint format bench bench-quick profile experiments experiments-hybrid hybrid serve loadtest docker legacy
 
 install:
 	uv sync --locked $(EXTRAS)
@@ -45,7 +45,10 @@ profile:          ## torch.profiler trace of a training step -> runs/profile/tra
 experiments:      ## 5-seed accuracy comparison (paper protocol)
 	$(PY) -m qnnbench.experiments --seeds 5 --epochs 3
 
-hybrid:           ## quanvolution vs classical controls on full MNIST
+experiments-hybrid: ## quantum filter vs classical controls, 5 seeds
+	$(PY) -m qnnbench.experiments --suite hybrid --seeds 5 --epochs 5
+
+hybrid:           ## quanvolution vs classical controls on full MNIST, one seed
 	for f in quanv random learned; do \
 		$(PY) -m qnnbench.hybrid --features $$f --epochs 5 --out results/hybrid/$$f.json; \
 	done
