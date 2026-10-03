@@ -61,6 +61,7 @@ async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
         "concurrency": concurrency,
         "requests": len(lat),
         "errors": errors,
+        "status_counts": status_counts,
         "shed_503": status_counts.get(503, 0),
         "timeout_504": status_counts.get(504, 0),
         "throughput_rps": len(lat) / elapsed,
@@ -93,6 +94,11 @@ def main(argv=None):
     p.add_argument("--requests", type=int, default=1000)
     p.add_argument("--torch-threads", type=int, help="QNNBENCH_TORCH_THREADS for spawned servers")
     p.add_argument("--max-queue", type=int, help="QNNBENCH_MAX_QUEUE for spawned servers")
+    p.add_argument(
+        "--limit-concurrency",
+        type=int,
+        help="uvicorn --limit-concurrency: reject with 503 at the connection layer, before parsing",
+    )
     p.add_argument("--out", type=Path)
     args = p.parse_args(argv)
 
@@ -108,7 +114,9 @@ def main(argv=None):
                 env["QNNBENCH_MAX_QUEUE"] = str(args.max_queue)
             proc = subprocess.Popen(
                 [sys.executable, "-m", "uvicorn", "qnnbench.serve:app", "--port", port,
-                 "--log-level", "warning"],
+                 "--log-level", "warning",
+                 *(["--limit-concurrency", str(args.limit_concurrency)]
+                   if args.limit_concurrency else [])],
                 env=env,
             )  # fmt: skip
             _wait_ready(args.url, proc)
@@ -121,7 +129,8 @@ def main(argv=None):
                     f"max_batch={max_batch} concurrency={c:>3}: "
                     f"{r['throughput_rps']:7.1f} req/s  p50={r['p50_ms']:7.1f} ms  "
                     f"p95={r['p95_ms']:7.1f} ms  p99={r['p99_ms']:7.1f} ms  "
-                    f"shed={r['shed_503']} timeout={r['timeout_504']} errors={r['errors']}"
+                    f"shed={r['shed_503']} timeout={r['timeout_504']} errors={r['errors']} "
+                    f"statuses={r['status_counts']}"
                 )
         finally:
             if proc:

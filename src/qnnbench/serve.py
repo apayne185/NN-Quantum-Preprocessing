@@ -261,7 +261,7 @@ async def lifespan(app: FastAPI):
     app.state.batcher, app.state.metrics, app.state.settings = batcher, metrics, settings
     app.state.device, app.state.model_version, app.state.draining = device, version, False
     configured = {k: v for k, v in vars(settings).items() if v is not None}
-    log.info("server ready", extra={"device": str(device), "model_version": version, **configured})
+    log.info("server ready", extra={**configured, "device": str(device), "model_version": version})
     yield
     app.state.draining = True
     log.info("draining", extra={"queued": batcher.queue.qsize()})
