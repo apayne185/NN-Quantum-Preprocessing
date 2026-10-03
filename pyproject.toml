@@ -12,6 +12,7 @@ authors = [{ name = "Anna Payne" }]
 dependencies = [
     "torch>=2.3",
     "numpy>=1.24",
+    "tomli>=2; python_version < '3.11'",  # tomllib backport for config files
 ]
 
 [project.optional-dependencies]

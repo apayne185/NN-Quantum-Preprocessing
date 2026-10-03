@@ -36,6 +36,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from torch.utils.data.distributed import DistributedSampler
 
+from qnnbench.config import add_dataclass_args, build_config
 from qnnbench.data import load_mnist
 from qnnbench.env import env_info
 from qnnbench.quanv import QuanvConfig, cached_features
@@ -328,18 +329,11 @@ def quantize_and_compare(model: nn.Module, ds: TensorDataset, cfg: HybridConfig)
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    for f in HybridConfig.__dataclass_fields__.values():
-        flag = f"--{f.name.replace('_', '-')}"
-        if str(f.type) == "bool":
-            p.add_argument(flag, action=argparse.BooleanOptionalAction, default=f.default)
-        else:
-            p.add_argument(
-                flag, type={"int": int, "float": float}.get(str(f.type), str), default=f.default
-            )
+    add_dataclass_args(p, HybridConfig)
     p.add_argument("--out", type=Path, help="write the run as JSON (rank 0)")
-    args = vars(p.parse_args(argv))
-    out = args.pop("out")
-    result = train(HybridConfig(**args))
+    args = p.parse_args(argv)
+    result = train(build_config(HybridConfig, args))
+    out = args.out
     if out and int(os.environ.get("RANK", 0)) == 0:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(result, indent=2) + "\n")

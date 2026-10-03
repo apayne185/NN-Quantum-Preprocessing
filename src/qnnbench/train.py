@@ -18,6 +18,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from qnnbench.config import add_dataclass_args, build_config
 from qnnbench.data import prepare_binary_mnist
 from qnnbench.env import env_info, resolve_device
 from qnnbench.models import QNN, FairMLP, LookupTable, n_params
@@ -164,18 +165,12 @@ def lookup_table_accuracy(data=None) -> dict:
 
 def main(argv=None):
     p = argparse.ArgumentParser(description="Train the QNN or the fair MLP baseline.")
-    for f in TrainConfig.__dataclass_fields__.values():
-        if str(f.type) == "bool":
-            p.add_argument(f"--{f.name.replace('_', '-')}", action="store_true")
-        else:
-            caster = {"int": int, "float": float, "int | None": int}.get(str(f.type), str)
-            p.add_argument(f"--{f.name.replace('_', '-')}", type=caster, default=f.default)
+    add_dataclass_args(p, TrainConfig)
     p.add_argument("--out", type=Path, help="write the run (config, history, env) as JSON")
     p.add_argument("--save", type=Path, help="save the trained weights (state_dict)")
-    args = vars(p.parse_args(argv))
-    out, save = args.pop("out"), args.pop("save")
-    cfg = TrainConfig(**args)
-    result = train(cfg, save_path=save)
+    args = p.parse_args(argv)
+    out = args.out
+    result = train(build_config(TrainConfig, args), save_path=args.save)
     if out:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(asdict(result), indent=2) + "\n")
