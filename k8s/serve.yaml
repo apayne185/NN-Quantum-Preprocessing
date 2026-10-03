@@ -48,6 +48,10 @@ spec:
             - {name: QNNBENCH_REQUEST_TIMEOUT_MS, value: "2000"}
             - {name: QNNBENCH_DRAIN_TIMEOUT_S, value: "10"}
             - {name: QNNBENCH_LOG_FORMAT, value: json}
+            # Read-only root filesystem: point compile caches at the writable /tmp.
+            - {name: XDG_CACHE_HOME, value: /tmp/.cache}
+            - {name: TRITON_CACHE_DIR, value: /tmp/.triton}
+            - {name: TORCHINDUCTOR_CACHE_DIR, value: /tmp/torchinductor}
           resources:
             requests: {cpu: "2", memory: 4Gi}
             limits: {nvidia.com/gpu: 1, memory: 4Gi}
