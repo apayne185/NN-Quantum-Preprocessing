@@ -1,0 +1,10 @@
+# Serving stack: kubectl apply -k k8s/
+# Jobs (bench-job, ddp-job, pytorchjob) are applied on demand with -f.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - serve.yaml
+images:
+  # Deploy a specific build: kustomize edit set image ghcr.io/apayne185/qnnbench:sha-<commit>
+  - name: ghcr.io/apayne185/qnnbench
+    newTag: "0.1.0"

@@ -14,6 +14,8 @@ cheaper path: a broadcast multiply with no matmul or transpose.
 
 from __future__ import annotations
 
+import contextlib
+
 import torch
 
 from qnnbench.sim.circuit import Circuit, Op
@@ -21,6 +23,28 @@ from qnnbench.sim.fusion import Block
 from qnnbench.sim.gates import GATES
 
 Tensor = torch.Tensor
+
+# Named profiler ranges per gate / fused block. Off by default so normal runs
+# and torch.compile graphs are untouched; `qnnbench.profile` switches it on.
+# With NVTX on, the same names appear in Nsight Systems timelines on CUDA.
+LABELS = {"enabled": False, "nvtx": False}
+
+
+@contextlib.contextmanager
+def _labelled(name: str):
+    with torch.profiler.record_function(name):
+        if LABELS["nvtx"]:
+            torch.cuda.nvtx.range_push(name)
+            try:
+                yield
+            finally:
+                torch.cuda.nvtx.range_pop()
+        else:
+            yield
+
+
+def region(name: str):
+    return _labelled(name) if LABELS["enabled"] else contextlib.nullcontext()
 
 
 # --------------------------------------------------------------------------- state prep
@@ -93,7 +117,7 @@ def apply(state: Tensor, mat: Tensor, op: Op, n: int) -> Tensor:
     diagonal = GATES[op.gate].diagonal
     if len(op.qubits) == 1:
         return apply_1q(state, mat, op.qubits[0], n, diagonal)
-    return apply_2q(state, mat, op.qubits, n, diagonal)
+    return apply_2q(state, mat, (op.qubits[0], op.qubits[1]), n, diagonal)
 
 
 def dagger(mat: Tensor, diagonal: bool) -> Tensor:
@@ -105,6 +129,10 @@ def dagger(mat: Tensor, diagonal: bool) -> Tensor:
 
 def _param(op: Op, params: Tensor | None, real_dtype) -> Tensor | None:
     if op.param is not None:
+        if params is None:
+            raise ValueError(
+                f"{op.gate} on {op.qubits} needs parameter {op.param}, got params=None"
+            )
         return params[op.param]
     if op.value is not None:
         return torch.tensor(op.value, dtype=real_dtype)
@@ -134,16 +162,20 @@ def simulate(
     n = circuit.n_qubits
     if plan is None:
         for op, mat in zip(circuit.ops, mats, strict=True):
-            state = apply(state, mat, op, n)
+            with region(f"gate:{op.gate}{list(op.qubits)}"):
+                state = apply(state, mat, op, n)
         return state
     for block in plan:
         if len(block.ops) == 1:
             i = block.ops[0]
-            state = apply(state, mats[i], circuit.ops[i], n)
+            with region(f"gate:{circuit.ops[i].gate}{list(circuit.ops[i].qubits)}"):
+                state = apply(state, mats[i], circuit.ops[i], n)
         elif block.diagonal:
-            state = state * _fused_diagonal(circuit, mats, block, state)
+            with region(f"fused_diag:{len(block.ops)}gates"):
+                state = state * _fused_diagonal(circuit, mats, block, state)
         else:
-            state = apply_kq(state, _fused_unitary(circuit, mats, block), block.qubits, n)
+            with region(f"fused_dense:k={len(block.qubits)},{len(block.ops)}gates"):
+                state = apply_kq(state, _fused_unitary(circuit, mats, block), block.qubits, n)
     return state
 
 
@@ -219,6 +251,7 @@ class _AdjointExpectation(torch.autograd.Function):
                 gate = GATES[op.gate]
                 psi = apply(psi, dagger(mat, gate.diagonal), op, n)
                 if op.param is not None:
+                    assert gate.derivative is not None  # Op() rejects params on fixed gates
                     dmat = gate.derivative(params[op.param], dtype, device)
                     mu = apply(psi, dmat, op, n)
                     grad[:, op.param] += 2 * (lam.conj() * mu).real.sum(dim=1)
@@ -255,6 +288,7 @@ class _ParameterShiftExpectation(torch.autograd.Function):
                 if op.param is None:
                     continue
                 gate = GATES[op.gate]
+                assert gate.shift is not None and gate.shift_coeff is not None
                 evals = []
                 for sign in (1, -1):
                     # Shift only this occurrence, so shared parameters sum correctly.

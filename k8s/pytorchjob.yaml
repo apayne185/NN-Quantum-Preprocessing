@@ -1,0 +1,55 @@
+# Multi-node data-parallel training with the Kubeflow Training Operator.
+# The operator starts one master and N workers and sets torchrun's PET_*
+# variables (nnodes, node rank, master address) for the rendezvous; torchrun
+# then sets RANK / LOCAL_RANK / WORLD_SIZE per process, which is all
+# qnnbench.hybrid reads. Same code as the single-node torchrun job.
+# 2 nodes x 2 GPUs = 4 ranks, gradients all-reduced over NCCL.
+apiVersion: kubeflow.org/v1
+kind: PyTorchJob
+metadata:
+  name: qnnbench-hybrid-multinode
+spec:
+  nprocPerNode: "2"
+  pytorchReplicaSpecs:
+    Master:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+          containers:
+            - name: pytorch
+              image: ghcr.io/apayne185/qnnbench:0.1.0
+              command: [torchrun, -m, qnnbench.hybrid, --features=quanv, --epochs=5,
+                        --out=/results/hybrid-multinode.json]
+              env:
+                - {name: NCCL_DEBUG, value: WARN}
+              resources:
+                limits: {nvidia.com/gpu: 2, memory: 32Gi}
+              volumeMounts:
+                - {name: dshm, mountPath: /dev/shm}
+                - {name: results, mountPath: /results}
+          volumes:
+            - {name: dshm, emptyDir: {medium: Memory, sizeLimit: 2Gi}}
+            - name: results
+              persistentVolumeClaim: {claimName: qnnbench-results}
+    Worker:
+      replicas: 1
+      restartPolicy: OnFailure
+      template:
+        spec:
+          tolerations:
+            - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+          containers:
+            - name: pytorch
+              image: ghcr.io/apayne185/qnnbench:0.1.0
+              command: [torchrun, -m, qnnbench.hybrid, --features=quanv, --epochs=5]
+              env:
+                - {name: NCCL_DEBUG, value: WARN}
+              resources:
+                limits: {nvidia.com/gpu: 2, memory: 32Gi}
+              volumeMounts:
+                - {name: dshm, mountPath: /dev/shm}
+          volumes:
+            - {name: dshm, emptyDir: {medium: Memory, sizeLimit: 2Gi}}

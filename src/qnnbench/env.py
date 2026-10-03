@@ -47,7 +47,7 @@ def device_name(device: torch.device) -> str:
 
 def env_info(device: torch.device) -> dict:
     """Everything needed to tell whether two benchmark results are comparable."""
-    info = {
+    info: dict[str, object] = {
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_sha": git_sha(),
         "python": platform.python_version(),

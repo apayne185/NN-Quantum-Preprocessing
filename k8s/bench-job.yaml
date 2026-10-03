@@ -21,7 +21,7 @@ spec:
       #   nvidia.com/gpu.product: NVIDIA-L4
       containers:
         - name: bench
-          image: ghcr.io/apayne185/qnnbench:latest
+          image: ghcr.io/apayne185/qnnbench:0.1.0  # immutable release tag; see k8s/README.md
           command: ["python", "-m", "qnnbench.bench", "all", "--out", "/results"]
           resources:
             requests: {cpu: "4", memory: 16Gi}

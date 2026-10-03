@@ -1,0 +1,7 @@
+# Effective batch 512 from micro-batches of 64: 4 accumulation steps x 2 ranks.
+# torchrun --nproc-per-node 2 -m qnnbench.hybrid --config configs/hybrid_ddp_accum.toml
+features = "quanv"
+epochs = 5
+batch_size = 512
+accum_steps = 4
+lr = 4e-3

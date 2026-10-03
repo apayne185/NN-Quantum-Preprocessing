@@ -1,0 +1,5 @@
+# The 37-parameter classical baseline under the same protocol as the QNN.
+model = "mlp"
+epochs = 3
+batch_size = 32
+lr = 1e-3

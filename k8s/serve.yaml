@@ -5,41 +5,117 @@ metadata:
   name: qnnbench-serve
   labels: {app: qnnbench, component: serve}
 spec:
-  replicas: 1
+  replicas: 2   # with the PodDisruptionBudget, one stays up during node drains
   selector:
     matchLabels: {app: qnnbench, component: serve}
+  strategy:
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}   # never drop below capacity on deploy
   template:
     metadata:
       labels: {app: qnnbench, component: serve}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
     spec:
+      # SIGTERM -> app drains its queue (QNNBENCH_DRAIN_TIMEOUT_S); must exceed
+      # preStop + drain + uvicorn's graceful shutdown.
+      terminationGracePeriodSeconds: 30
       tolerations:
         - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile: {type: RuntimeDefault}
       containers:
         - name: serve
-          image: ghcr.io/apayne185/qnnbench:latest
-          command: ["uvicorn", "qnnbench.serve:app", "--host", "0.0.0.0", "--port", "8000"]
+          image: ghcr.io/apayne185/qnnbench:0.1.0  # immutable release tag; see k8s/README.md
+          command:
+            - uvicorn
+            - qnnbench.serve:app
+            - --host=0.0.0.0
+            - --port=8000
+            # Refuse excess connections with 503 before parsing them: overload
+            # otherwise queues in the connection backlog, invisible to the app.
+            - --limit-concurrency=128
+            - --timeout-graceful-shutdown=15
           ports:
             - {containerPort: 8000, name: http}
           env:
             - {name: QNNBENCH_MAX_BATCH, value: "64"}
             - {name: QNNBENCH_MAX_WAIT_MS, value: "5"}
+            - {name: QNNBENCH_MAX_QUEUE, value: "256"}
+            - {name: QNNBENCH_REQUEST_TIMEOUT_MS, value: "2000"}
+            - {name: QNNBENCH_DRAIN_TIMEOUT_S, value: "10"}
+            - {name: QNNBENCH_LOG_FORMAT, value: json}
+            # Read-only root filesystem: point compile caches at the writable /tmp.
+            - {name: XDG_CACHE_HOME, value: /tmp/.cache}
+            - {name: TRITON_CACHE_DIR, value: /tmp/.triton}
+            - {name: TORCHINDUCTOR_CACHE_DIR, value: /tmp/torchinductor}
           resources:
             requests: {cpu: "2", memory: 4Gi}
             limits: {nvidia.com/gpu: 1, memory: 4Gi}
-          readinessProbe:
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}   # torch.compile / inductor caches
+          startupProbe:          # model load + CUDA init can take a while
             httpGet: {path: /healthz, port: http}
-            initialDelaySeconds: 5
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:        # 503 while draining -> removed from the Service
+            httpGet: {path: /readyz, port: http}
             periodSeconds: 5
           livenessProbe:
             httpGet: {path: /healthz, port: http}
-            initialDelaySeconds: 30
             periodSeconds: 10
+          lifecycle:
+            # Give endpoints time to drop this pod before SIGTERM starts the drain,
+            # so no new requests arrive after it stops admitting work.
+            preStop:
+              sleep: {seconds: 5}
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: qnnbench-serve
+  labels: {app: qnnbench, component: serve}
 spec:
   selector: {app: qnnbench, component: serve}
   ports:
     - {port: 80, targetPort: http, name: http}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: qnnbench-serve
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels: {app: qnnbench, component: serve}
+---
+# Scale on queue depth, not CPU: this service is GPU-bound, so CPU utilisation
+# says little about load, while a growing batch queue is the direct signal that
+# requests are waiting. Needs prometheus-adapter exposing qnnbench_queue_depth
+# as a per-pod custom metric.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: qnnbench-serve
+spec:
+  scaleTargetRef: {apiVersion: apps/v1, kind: Deployment, name: qnnbench-serve}
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Pods
+      pods:
+        metric: {name: qnnbench_queue_depth}
+        target: {type: AverageValue, averageValue: "32"}   # half of one full batch
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300   # GPU pods are slow to start; don't flap

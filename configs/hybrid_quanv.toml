@@ -1,0 +1,7 @@
+# Quanvolution features + CNN head on full 10-class MNIST.
+# Change `features` to "random" or "learned" for the classical controls.
+features = "quanv"
+epochs = 5
+batch_size = 128
+lr = 2e-3
+amp = "auto"

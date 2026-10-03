@@ -1,0 +1,7 @@
+# The paper's QNN protocol: 3 epochs, batch 32, Adam 1e-3, full training set.
+model = "qnn"
+epochs = 3
+batch_size = 32
+lr = 1e-3
+grad_method = "autograd"
+fuse = 5

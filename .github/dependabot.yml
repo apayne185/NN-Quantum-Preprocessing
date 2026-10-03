@@ -1,0 +1,35 @@
+# Weekly, grouped dependency updates: a handful of PRs instead of dozens.
+# The legacy TFQ stack (legacy/tfq/requirements.txt) is pinned on purpose
+# for reproducibility and is deliberately not listed here.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule: {interval: weekly, day: monday}
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      # Separate PR: a PyTorch upgrade can change kernel performance, so check
+      # it against the benchmark baselines (qnnbench.bench.compare), not just tests.
+      pytorch:
+        patterns: ["torch"]
+      quantum-baselines:
+        patterns: ["cirq*", "pennylane*"]
+      dev-tools:
+        patterns: ["pytest*", "ruff", "mypy", "coverage"]
+      runtime:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly, day: monday}
+    labels: [dependencies, ci]
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule: {interval: weekly, day: monday}
+    labels: [dependencies, docker]

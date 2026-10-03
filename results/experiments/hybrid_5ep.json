@@ -1,0 +1,1050 @@
+{
+  "summary": {
+    "Quantum filter (quanvolution)": {
+      "test_acc_mean": 0.988979983329773,
+      "test_acc_std": 0.0019070915711111682,
+      "test_acc_min": 0.9865999817848206,
+      "test_acc_max": 0.9912999868392944
+    },
+    "Random classical 2x2 filter": {
+      "test_acc_mean": 0.9868600010871887,
+      "test_acc_std": 0.0024885732017810706,
+      "test_acc_min": 0.984000027179718,
+      "test_acc_max": 0.9898999929428101
+    },
+    "Learned 2x2 filter": {
+      "test_acc_mean": 0.9882800102233886,
+      "test_acc_std": 0.0022785967006698554,
+      "test_acc_min": 0.9847000241279602,
+      "test_acc_max": 0.9900000095367432
+    }
+  },
+  "runs": {
+    "Quantum filter (quanvolution)": [
+      {
+        "config": {
+          "features": "quanv",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 0,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.21920724213123322,
+            "test_acc": 0.9847999811172485,
+            "epoch_time_s": 4.581357294000043,
+            "samples_per_s": 13075.600996772953,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.05642542615532875,
+            "test_acc": 0.9847000241279602,
+            "epoch_time_s": 4.308452268999986,
+            "samples_per_s": 13903.83280581266,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.04097083956003189,
+            "test_acc": 0.9883000254631042,
+            "epoch_time_s": 4.9102460789999895,
+            "samples_per_s": 12199.795903548671,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.03344146907329559,
+            "test_acc": 0.9887999892234802,
+            "epoch_time_s": 5.573855421000019,
+            "samples_per_s": 10747.318592855156,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.024553827941417694,
+            "test_acc": 0.9879999756813049,
+            "epoch_time_s": 12.088406371999952,
+            "samples_per_s": 4955.491911552048,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:13:35+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "quanv",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 1,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.2339928299188614,
+            "test_acc": 0.982699990272522,
+            "epoch_time_s": 8.474945584000011,
+            "samples_per_s": 7068.363968388629,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.05634909123182297,
+            "test_acc": 0.982699990272522,
+            "epoch_time_s": 5.791835752999987,
+            "samples_per_s": 10342.834734042939,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.040217913687229156,
+            "test_acc": 0.9830999970436096,
+            "epoch_time_s": 5.759171180999999,
+            "samples_per_s": 10401.496694112591,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.030153954401612282,
+            "test_acc": 0.9865999817848206,
+            "epoch_time_s": 5.205131963000042,
+            "samples_per_s": 11508.641937576082,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.024800557643175125,
+            "test_acc": 0.9884999990463257,
+            "epoch_time_s": 5.010928252000042,
+            "samples_per_s": 11954.671267961212,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:14:09+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "quanv",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 2,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.21074974536895752,
+            "test_acc": 0.9832000136375427,
+            "epoch_time_s": 4.915331643999991,
+            "samples_per_s": 12187.173590437818,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.05376909300684929,
+            "test_acc": 0.9876999855041504,
+            "epoch_time_s": 5.005604387999995,
+            "samples_per_s": 11967.386025073954,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.0366174690425396,
+            "test_acc": 0.9879000186920166,
+            "epoch_time_s": 4.939109400999996,
+            "samples_per_s": 12128.50235466976,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.03024860844016075,
+            "test_acc": 0.9865000247955322,
+            "epoch_time_s": 5.046073500000034,
+            "samples_per_s": 11871.408531801924,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.024090182036161423,
+            "test_acc": 0.9904999732971191,
+            "epoch_time_s": 4.980538453999998,
+            "samples_per_s": 12027.615197286463,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:14:36+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "quanv",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 3,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.2201165109872818,
+            "test_acc": 0.9782000184059143,
+            "epoch_time_s": 5.134689395000009,
+            "samples_per_s": 11666.528467784738,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.05612645670771599,
+            "test_acc": 0.9857000112533569,
+            "epoch_time_s": 5.067529055999955,
+            "samples_per_s": 11821.145836169138,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.038699500262737274,
+            "test_acc": 0.9886000156402588,
+            "epoch_time_s": 5.101838810999993,
+            "samples_per_s": 11741.648887621055,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.02958502434194088,
+            "test_acc": 0.9868999719619751,
+            "epoch_time_s": 5.031482237000034,
+            "samples_per_s": 11905.8355328145,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.02571994625031948,
+            "test_acc": 0.9865999817848206,
+            "epoch_time_s": 5.01242419099998,
+            "samples_per_s": 11951.10344163612,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:15:04+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "quanv",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 4,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.2137017548084259,
+            "test_acc": 0.9783999919891357,
+            "epoch_time_s": 4.953247939999983,
+            "samples_per_s": 12093.882786735729,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.056216441094875336,
+            "test_acc": 0.9865000247955322,
+            "epoch_time_s": 5.04179559399995,
+            "samples_per_s": 11881.481286407065,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.03859167918562889,
+            "test_acc": 0.984499990940094,
+            "epoch_time_s": 5.069873605999987,
+            "samples_per_s": 11815.679177702985,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.029611654579639435,
+            "test_acc": 0.9873999953269958,
+            "epoch_time_s": 5.022593151000024,
+            "samples_per_s": 11926.906719106406,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.025359096005558968,
+            "test_acc": 0.9912999868392944,
+            "epoch_time_s": 4.965418031000013,
+            "samples_per_s": 12064.241041944177,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:15:31+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      }
+    ],
+    "Random classical 2x2 filter": [
+      {
+        "config": {
+          "features": "random",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 0,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.35433608293533325,
+            "test_acc": 0.9740999937057495,
+            "epoch_time_s": 5.171968091999986,
+            "samples_per_s": 11582.4380457141,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.08487492054700851,
+            "test_acc": 0.9843999743461609,
+            "epoch_time_s": 5.269620403999966,
+            "samples_per_s": 11367.801740430712,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.060712046921253204,
+            "test_acc": 0.9858999848365784,
+            "epoch_time_s": 5.371182955999984,
+            "samples_per_s": 11152.850403854345,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.046677447855472565,
+            "test_acc": 0.9850000143051147,
+            "epoch_time_s": 5.208875172000035,
+            "samples_per_s": 11500.37158156717,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.04048265144228935,
+            "test_acc": 0.9898999929428101,
+            "epoch_time_s": 5.203650116000006,
+            "samples_per_s": 11511.919261406378,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:16:00+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "random",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 1,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.4990118443965912,
+            "test_acc": 0.9546999931335449,
+            "epoch_time_s": 5.141125955000007,
+            "samples_per_s": 11651.92226845567,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.12508627772331238,
+            "test_acc": 0.9708999991416931,
+            "epoch_time_s": 5.275518363000003,
+            "samples_per_s": 11355.09269006405,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.08436780422925949,
+            "test_acc": 0.9787999987602234,
+            "epoch_time_s": 5.410959814000023,
+            "samples_per_s": 11070.863961141913,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.06815337389707565,
+            "test_acc": 0.9793000221252441,
+            "epoch_time_s": 5.38242569800002,
+            "samples_per_s": 11129.554472486056,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.05383356288075447,
+            "test_acc": 0.984000027179718,
+            "epoch_time_s": 5.441840909999996,
+            "samples_per_s": 11008.039556966769,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:16:29+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "random",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 2,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.5263582468032837,
+            "test_acc": 0.9531000256538391,
+            "epoch_time_s": 5.770404933000009,
+            "samples_per_s": 10381.247190715985,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.12576647102832794,
+            "test_acc": 0.9740999937057495,
+            "epoch_time_s": 9.466994846999967,
+            "samples_per_s": 6327.667963079458,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.08476180583238602,
+            "test_acc": 0.98089998960495,
+            "epoch_time_s": 9.53845615199998,
+            "samples_per_s": 6280.261611040651,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.066258504986763,
+            "test_acc": 0.9785000085830688,
+            "epoch_time_s": 8.507499531000008,
+            "samples_per_s": 7041.316873626513,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.0558813251554966,
+            "test_acc": 0.9858999848365784,
+            "epoch_time_s": 6.9116164650000655,
+            "samples_per_s": 8667.147591789793,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:17:13+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "random",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 3,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.3434780240058899,
+            "test_acc": 0.9733999967575073,
+            "epoch_time_s": 6.268804760999956,
+            "samples_per_s": 9555.888607774177,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.0889236256480217,
+            "test_acc": 0.9800999760627747,
+            "epoch_time_s": 6.446676250999985,
+            "samples_per_s": 9292.230238909222,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.06370498239994049,
+            "test_acc": 0.9829000234603882,
+            "epoch_time_s": 6.351695479,
+            "samples_per_s": 9431.182618570874,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.05079502612352371,
+            "test_acc": 0.9836000204086304,
+            "epoch_time_s": 6.345446760999948,
+            "samples_per_s": 9440.470034068967,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.04140814021229744,
+            "test_acc": 0.9854999780654907,
+            "epoch_time_s": 6.347121119999997,
+            "samples_per_s": 9437.97965525511,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:17:47+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "random",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 4,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.2642554044723511,
+            "test_acc": 0.9824000000953674,
+            "epoch_time_s": 6.208499622999966,
+            "samples_per_s": 9648.708003151041,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.06336600333452225,
+            "test_acc": 0.986299991607666,
+            "epoch_time_s": 6.208740958000021,
+            "samples_per_s": 9648.332955945461,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.04532846063375473,
+            "test_acc": 0.9839000105857849,
+            "epoch_time_s": 6.227709381000068,
+            "samples_per_s": 9618.94596153753,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.03719191253185272,
+            "test_acc": 0.9866999983787537,
+            "epoch_time_s": 6.301627566999969,
+            "samples_per_s": 9506.115580949612,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.02832144871354103,
+            "test_acc": 0.9890000224113464,
+            "epoch_time_s": 6.312137559000007,
+            "samples_per_s": 9490.287472361459,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:18:22+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      }
+    ],
+    "Learned 2x2 filter": [
+      {
+        "config": {
+          "features": "learned",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 0,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.3220442533493042,
+            "test_acc": 0.9771999716758728,
+            "epoch_time_s": 7.022614777000058,
+            "samples_per_s": 8530.156060416854,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.07398343831300735,
+            "test_acc": 0.9864000082015991,
+            "epoch_time_s": 7.39317121299996,
+            "samples_per_s": 8102.612299126303,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.05341559648513794,
+            "test_acc": 0.9861999750137329,
+            "epoch_time_s": 7.203592876000016,
+            "samples_per_s": 8315.850302920404,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.04222182556986809,
+            "test_acc": 0.9883999824523926,
+            "epoch_time_s": 7.117917383999952,
+            "samples_per_s": 8415.944828842144,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.03543967753648758,
+            "test_acc": 0.9897000193595886,
+            "epoch_time_s": 7.259658033000051,
+            "samples_per_s": 8251.628344984825,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:19:01+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "learned",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 1,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.3888051509857178,
+            "test_acc": 0.9746000170707703,
+            "epoch_time_s": 7.1327439650000315,
+            "samples_per_s": 8398.450903880122,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.08327937126159668,
+            "test_acc": 0.979200005531311,
+            "epoch_time_s": 7.248732142999984,
+            "samples_per_s": 8264.065883279822,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.05889558419585228,
+            "test_acc": 0.9868000149726868,
+            "epoch_time_s": 7.4062080410000135,
+            "samples_per_s": 8088.34962080157,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.04501546546816826,
+            "test_acc": 0.9887999892234802,
+            "epoch_time_s": 7.294586193999976,
+            "samples_per_s": 8212.117645449567,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.03657333180308342,
+            "test_acc": 0.9872999787330627,
+            "epoch_time_s": 7.193251864999979,
+            "samples_per_s": 8327.80516020485,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:19:40+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "learned",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 2,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.4248030185699463,
+            "test_acc": 0.9704999923706055,
+            "epoch_time_s": 11.072756947000016,
+            "samples_per_s": 5410.034762501494,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.08886608481407166,
+            "test_acc": 0.9815999865531921,
+            "epoch_time_s": 9.639731906000065,
+            "samples_per_s": 6214.280706573791,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.06357545405626297,
+            "test_acc": 0.9851999878883362,
+            "epoch_time_s": 8.858096937999903,
+            "samples_per_s": 6762.626376667979,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.05042662099003792,
+            "test_acc": 0.9818999767303467,
+            "epoch_time_s": 7.234797466000032,
+            "samples_per_s": 8279.982996278632,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.043122027069330215,
+            "test_acc": 0.9897000193595886,
+            "epoch_time_s": 7.311910855000065,
+            "samples_per_s": 8192.660056712284,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:20:27+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "learned",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 3,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.3300818204879761,
+            "test_acc": 0.9746999740600586,
+            "epoch_time_s": 6.99869662399999,
+            "samples_per_s": 8559.307999517609,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.0830077975988388,
+            "test_acc": 0.9818000197410583,
+            "epoch_time_s": 7.214499291999914,
+            "samples_per_s": 8303.278935300048,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.05917437747120857,
+            "test_acc": 0.982699990272522,
+            "epoch_time_s": 7.246228825000003,
+            "samples_per_s": 8266.92082829719,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.04580454155802727,
+            "test_acc": 0.9860000014305115,
+            "epoch_time_s": 7.214637212999946,
+            "samples_per_s": 8303.120202920236,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.03801117464900017,
+            "test_acc": 0.9847000241279602,
+            "epoch_time_s": 7.147413238000013,
+            "samples_per_s": 8381.214014815005,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:21:06+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      },
+      {
+        "config": {
+          "features": "learned",
+          "epochs": 5,
+          "batch_size": 128,
+          "accum_steps": 1,
+          "lr": 0.002,
+          "train_size": 60000,
+          "amp": "auto",
+          "compile": false,
+          "num_workers": 0,
+          "seed": 4,
+          "quantize": false
+        },
+        "world_size": 1,
+        "amp_dtype": "None",
+        "history": [
+          {
+            "epoch": 1,
+            "train_loss": 0.2440735548734665,
+            "test_acc": 0.9843999743461609,
+            "epoch_time_s": 7.102604659000008,
+            "samples_per_s": 8434.089024523297,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 2,
+            "train_loss": 0.059180546551942825,
+            "test_acc": 0.9855999946594238,
+            "epoch_time_s": 7.236601751999956,
+            "samples_per_s": 8277.9185663277,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 3,
+            "train_loss": 0.04207323491573334,
+            "test_acc": 0.9840999841690063,
+            "epoch_time_s": 7.5648023910000575,
+            "samples_per_s": 7918.779223006348,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 4,
+            "train_loss": 0.034313637763261795,
+            "test_acc": 0.9890999794006348,
+            "epoch_time_s": 7.273086777000003,
+            "samples_per_s": 8236.392859966556,
+            "peak_mem_MB": null
+          },
+          {
+            "epoch": 5,
+            "train_loss": 0.026602372527122498,
+            "test_acc": 0.9900000095367432,
+            "epoch_time_s": 8.577676396000015,
+            "samples_per_s": 6983.709484299819,
+            "peak_mem_MB": null
+          }
+        ],
+        "env": {
+          "timestamp": "2026-10-03T12:21:47+00:00",
+          "git_sha": "76e86ad",
+          "python": "3.12.13",
+          "torch": "2.14.1+cpu",
+          "device": "cpu",
+          "device_name": "Intel(R) Core(TM) i7-1065G7 CPU @ 1.30GHz",
+          "cpu_threads": 4
+        }
+      }
+    ]
+  }
+}

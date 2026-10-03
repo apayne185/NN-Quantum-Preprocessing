@@ -1,0 +1,41 @@
+# pre-commit install   # then these run on every `git commit`
+# legacy/ is the original code, kept as it was for reproducibility.
+exclude: ^legacy/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files   # the original repo had a committed virtualenv
+        args: [--maxkb=1024]
+        exclude: ^uv\.lock$
+      - id: check-yaml
+        args: [--allow-multiple-documents]  # k8s manifests
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+  # Local hooks run the tool versions pinned in uv.lock, so they agree with CI.
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff check
+        entry: uv run ruff check --fix --force-exclude
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types: [python]
+      - id: uv-lock
+        name: uv.lock matches pyproject.toml
+        entry: uv lock --check
+        language: system
+        files: ^(pyproject\.toml|uv\.lock)$
+        pass_filenames: false
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types: [python]
+        pass_filenames: false
