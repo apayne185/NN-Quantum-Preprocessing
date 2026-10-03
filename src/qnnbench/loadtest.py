@@ -27,6 +27,7 @@ import httpx
 async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
     latencies: list[float] = []
     errors = 0
+    status_counts: dict[int, int] = {}
     remaining = n_requests
     rng = random.Random(0)
 
@@ -38,9 +39,13 @@ async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
             t0 = time.perf_counter()
             try:
                 r = await http.post(f"{url}/predict", json={"pixels": pixels})
-                r.raise_for_status()
-                latencies.append((time.perf_counter() - t0) * 1e3)
             except httpx.HTTPError:
+                errors += 1
+                continue
+            status_counts[r.status_code] = status_counts.get(r.status_code, 0) + 1
+            if r.status_code == 200:
+                latencies.append((time.perf_counter() - t0) * 1e3)
+            elif r.status_code not in (503, 504):  # shed / deadline: expected under overload
                 errors += 1
 
     limits = httpx.Limits(max_connections=concurrency)
@@ -56,6 +61,8 @@ async def run_load(url: str, concurrency: int, n_requests: int) -> dict:
         "concurrency": concurrency,
         "requests": len(lat),
         "errors": errors,
+        "shed_503": status_counts.get(503, 0),
+        "timeout_504": status_counts.get(504, 0),
         "throughput_rps": len(lat) / elapsed,
         "p50_ms": statistics.median(lat) if lat else float("nan"),
         "p95_ms": pct(0.95),
@@ -70,7 +77,7 @@ def _wait_ready(url: str, proc: subprocess.Popen, timeout: float = 60):
         if proc.poll() is not None:
             raise RuntimeError("server exited during startup")
         try:
-            if httpx.get(f"{url}/healthz", timeout=1).status_code == 200:
+            if httpx.get(f"{url}/readyz", timeout=1).status_code == 200:
                 return
         except httpx.HTTPError:
             time.sleep(0.25)
@@ -85,6 +92,7 @@ def main(argv=None):
     p.add_argument("--concurrency", type=int, nargs="+", default=[1, 16, 64])
     p.add_argument("--requests", type=int, default=1000)
     p.add_argument("--torch-threads", type=int, help="QNNBENCH_TORCH_THREADS for spawned servers")
+    p.add_argument("--max-queue", type=int, help="QNNBENCH_MAX_QUEUE for spawned servers")
     p.add_argument("--out", type=Path)
     args = p.parse_args(argv)
 
@@ -96,6 +104,8 @@ def main(argv=None):
             env = {**os.environ, "QNNBENCH_MAX_BATCH": str(max_batch)}
             if args.torch_threads:
                 env["QNNBENCH_TORCH_THREADS"] = str(args.torch_threads)
+            if args.max_queue:
+                env["QNNBENCH_MAX_QUEUE"] = str(args.max_queue)
             proc = subprocess.Popen(
                 [sys.executable, "-m", "uvicorn", "qnnbench.serve:app", "--port", port,
                  "--log-level", "warning"],
@@ -110,7 +120,8 @@ def main(argv=None):
                 print(
                     f"max_batch={max_batch} concurrency={c:>3}: "
                     f"{r['throughput_rps']:7.1f} req/s  p50={r['p50_ms']:7.1f} ms  "
-                    f"p95={r['p95_ms']:7.1f} ms  p99={r['p99_ms']:7.1f} ms  errors={r['errors']}"
+                    f"p95={r['p95_ms']:7.1f} ms  p99={r['p99_ms']:7.1f} ms  "
+                    f"shed={r['shed_503']} timeout={r['timeout_504']} errors={r['errors']}"
                 )
         finally:
             if proc:

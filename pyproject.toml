@@ -26,6 +26,7 @@ bench = [
 ]
 serve = [
     "fastapi>=0.110",
+    "prometheus-client>=0.20",
     "uvicorn>=0.29",
     "httpx>=0.27",
 ]
