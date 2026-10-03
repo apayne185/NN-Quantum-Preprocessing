@@ -18,7 +18,7 @@ spec:
         - {key: nvidia.com/gpu, operator: Exists, effect: NoSchedule}
       containers:
         - name: train
-          image: ghcr.io/apayne185/qnnbench:latest
+          image: ghcr.io/apayne185/qnnbench:0.1.0  # immutable release tag; see k8s/README.md
           command:
             - torchrun
             - --standalone

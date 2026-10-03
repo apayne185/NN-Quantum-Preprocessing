@@ -77,3 +77,16 @@ jobs:
           uv export --frozen --no-hashes --no-emit-project \
             --extra dev --extra serve --extra bench | sed 's/+cpu//' > requirements-audit.txt
       - run: uvx pip-audit -r requirements-audit.txt --no-deps --disable-pip --progress-spinner off
+
+  k8s:
+    # Schema-validate every manifest (strict), including the kustomized stack
+    # and the Kubeflow PyTorchJob CRD.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Install kubeconform
+        run: |
+          curl -fsSL https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz \
+            | tar xz -C /usr/local/bin kubeconform
+          python3 -m pip install --quiet pyyaml
+      - run: k8s/validate.sh
